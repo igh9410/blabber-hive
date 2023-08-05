@@ -4,9 +4,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Create the users table
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    auth0_id VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL UNIQUE,
-    profile_image_url TEXT,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    profile_image_url VARCHAR(2048),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -38,8 +38,8 @@ CREATE TABLE messages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     chat_room_id UUID REFERENCES chat_rooms(id),
     sender_id UUID REFERENCES users(id),
-    content TEXT,
-    media_url TEXT,
+    content VARCHAR(1000),
+    media_url VARCHAR(2048),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
