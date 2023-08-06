@@ -33,6 +33,16 @@ func InitRouter(userHandler *user.Handler) {
 		c.JSON(http.StatusOK, gin.H{"message": "Hello from a private endpoint! You need to be authenticated to see this."})
 	})
 
+	// All routes in this group are protected
+	userRoutes := r.Group("/api/user")
+	userRoutes.Use(middleware.EnsureValidToken())
+	{
+		// Define your routes here, e.g.
+		userRoutes.GET("/profile", userHandler.CreateUser)
+		userRoutes.POST("/update", userHandler.CreateUser)
+		// etc...
+	}
+
 	if err := r.Run("0.0.0.0:8080"); err != nil {
 		log.Fatalf("There was an error with the http server: %v", err)
 	}
