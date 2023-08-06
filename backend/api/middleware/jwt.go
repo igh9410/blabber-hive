@@ -38,7 +38,7 @@ type CustomClaims struct {
 // EnsureValidToken is a middleware that will check the validity of our JWT.
 func EnsureValidToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var expectedIssuer = os.Getenv("SUPABASE_DOMAIN")
+		var expectedIssuer = os.Getenv("SUPABASE_AUTH")
 		var jwtSecretKey = os.Getenv("JWT_SECRET")
 
 		tokenString := extractTokenFromHeader(c)

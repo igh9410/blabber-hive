@@ -3,10 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -16,17 +14,24 @@ type Database struct {
 
 func NewDatabase() (*Database, error) {
 	// Load .env file from the /backend directory
-	err := godotenv.Load("../.env")
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	/*	err := godotenv.Load("../.env")
+		if err != nil {
+			log.Fatal("Error loading .env file")
+		} */
 
-	// Retrieve the username and password from environment variables
+	/* Retrieve the username and password from environment variables
+
 	username := os.Getenv("POSTGRES_USERNAME")
 	password := os.Getenv("POSTGRES_PASSWORD")
 
 	// Create the connection string using the retrieved values
-	connectionString := fmt.Sprintf("postgresql://%s:%s@localhost:5432/blabber_hive?sslmode=disable", username, password)
+	// local connectionString := fmt.Sprintf("postgresql://%s:%s@localhost:5432/blabber_hive?sslmode=disable", username, password) */
+
+	// Retrieve the values from environment variables
+	password := os.Getenv("SUPABASE_POSTGRES_PASSWORD")
+	domain := "db." + os.Getenv("SUPABASE_DOMAIN")
+
+	connectionString := fmt.Sprintf("postgres:%s@%s/postgres", password, domain)
 
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {

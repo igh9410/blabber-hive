@@ -11,13 +11,14 @@ import (
 
 func main() {
 	if err := godotenv.Load("../.env"); err != nil {
-		log.Fatalf("Error loading the .env file: %v", err)
+		log.Println("No .env file found. Using OS environment variables.")
 	}
 
 	dbConn, err := db.NewDatabase()
 	if err != nil {
 		log.Fatalf("Could not initialize database connection: %s", err)
 	}
+	defer dbConn.Close()
 	log.Println("Database initialized")
 
 	userRep := user.NewRepository(dbConn.GetDB())
@@ -25,5 +26,5 @@ func main() {
 	userHandler := user.NewHandler(userSvc)
 
 	router.InitRouter(userHandler)
-	router.Start("0.0.0.0:8080")
+
 }
