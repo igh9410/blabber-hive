@@ -3,9 +3,8 @@
 package middleware
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -39,33 +38,56 @@ type CustomClaims struct {
 // EnsureValidToken is a middleware that will check the validity of our JWT.
 func EnsureValidToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization") // Get token from the Authorization header
+		var expectedIssuer = os.Getenv("SUPABASE_DOMAIN")
+		var jwtSecretKey = os.Getenv("JWT_SECRET")
+
+		tokenString := extractTokenFromHeader(c)
 		if tokenString == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+			abortWithUnauthorized(c, "Authorization header required")
 			return
 		}
 
-		// If the token string starts with "Bearer ", remove it.
-		if len(tokenString) > 7 && strings.ToUpper(tokenString[0:7]) == "BEARER " {
-			tokenString = tokenString[7:]
-		}
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return []byte("AllYourBase"), nil
-		})
+		token, err := parseJWT(tokenString, jwtSecretKey)
 
-		if token.Valid {
-			fmt.Println("You look nice today")
-		} else if errors.Is(err, jwt.ErrTokenMalformed) {
-			fmt.Println("That's not even a token")
-		} else if errors.Is(err, jwt.ErrTokenSignatureInvalid) {
-			// Invalid signature
-			fmt.Println("Invalid signature")
-		} else if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
-			// Token is either expired or not active yet
-			fmt.Println("Timing is everything")
+		if err != nil {
+			abortWithUnauthorized(c, err.Error())
+			return
+		}
+
+		if isValidToken(token, expectedIssuer) {
+			email := token.Claims.(jwt.MapClaims)["email"].(string)
+			c.Set("email", email)
+			c.Next()
 		} else {
-			fmt.Println("Couldn't handle this token:", err)
+			abortWithUnauthorized(c, "invalid token")
 		}
-	}
 
+	}
+}
+
+func extractTokenFromHeader(c *gin.Context) string {
+	tokenString := c.GetHeader("Authorization")
+	if strings.HasPrefix(strings.ToUpper(tokenString), "BEARER ") {
+		return tokenString[7:]
+	}
+	return tokenString
+}
+
+func parseJWT(tokenString, jwtSecretKey string) (*jwt.Token, error) {
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(jwtSecretKey), nil
+	})
+}
+
+func isValidToken(token *jwt.Token, expectedIssuer string) bool {
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		issuer := claims["iss"].(string)
+		email := claims["email"].(string)
+		return issuer == expectedIssuer && email != ""
+	}
+	return false
+}
+
+func abortWithUnauthorized(c *gin.Context, message string) {
+	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": message})
 }

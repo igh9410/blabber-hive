@@ -1,45 +1,90 @@
 -- Enable the UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create the users table
+-- public.users definition
+
+-- Drop table
+
+-- DROP TABLE users;
+
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    username VARCHAR(255) NOT NULL UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    profile_image_url VARCHAR(2048),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+	id uuid NOT NULL DEFAULT uuid_generate_v4(),
+	username varchar(255) NOT NULL,
+	email varchar(255) NOT NULL,
+	profile_image_url varchar(2048) NULL,
+	created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT users_email_key UNIQUE (email),
+	CONSTRAINT users_nickname_key UNIQUE (username),
+	CONSTRAINT users_pkey PRIMARY KEY (id)
 );
 
--- Create the friends table
-CREATE TABLE friends (
-    user_id UUID REFERENCES users(id),
-    friend_id UUID REFERENCES users(id),
-    PRIMARY KEY (user_id, friend_id)
-);
 
--- Create the blocks table
+-- public.blocks definition
+
+-- Drop table
+
+-- DROP TABLE blocks;
+
 CREATE TABLE blocks (
-    user_id UUID REFERENCES users(id),
-    blocked_user_id UUID REFERENCES users(id),
-    PRIMARY KEY (user_id, blocked_user_id)
+	user_id uuid NOT NULL,
+	blocked_user_id uuid NOT NULL,
+	CONSTRAINT blocks_pkey PRIMARY KEY (user_id, blocked_user_id),
+	CONSTRAINT blocks_blocked_user_id_fkey FOREIGN KEY (blocked_user_id) REFERENCES users(id),
+	CONSTRAINT blocks_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Create the chat_rooms table
+
+-- public.chat_rooms definition
+
+-- Drop table
+
+-- DROP TABLE chat_rooms;
+
 CREATE TABLE chat_rooms (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id_1 UUID REFERENCES users(id),
-    user_id_2 UUID REFERENCES users(id),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id_1, user_id_2)
+	id uuid NOT NULL DEFAULT uuid_generate_v4(),
+	user_id_1 uuid NULL,
+	user_id_2 uuid NULL,
+	created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	CONSTRAINT chat_rooms_pkey PRIMARY KEY (id),
+	CONSTRAINT chat_rooms_user_id_1_user_id_2_key UNIQUE (user_id_1, user_id_2),
+	CONSTRAINT chat_rooms_user_id_1_fkey FOREIGN KEY (user_id_1) REFERENCES users(id),
+	CONSTRAINT chat_rooms_user_id_2_fkey FOREIGN KEY (user_id_2) REFERENCES users(id)
 );
 
--- Create the messages table
+
+-- public.friends definition
+
+-- Drop table
+
+-- DROP TABLE friends;
+
+CREATE TABLE friends (
+	user_id uuid NOT NULL,
+	friend_id uuid NOT NULL,
+	CONSTRAINT friends_pkey PRIMARY KEY (user_id, friend_id),
+	CONSTRAINT friends_friend_id_fkey FOREIGN KEY (friend_id) REFERENCES users(id),
+	CONSTRAINT friends_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+
+-- public.messages definition
+
+-- Drop table
+
+-- DROP TABLE messages;
+
 CREATE TABLE messages (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    chat_room_id UUID REFERENCES chat_rooms(id),
-    sender_id UUID REFERENCES users(id),
-    content VARCHAR(1000),
-    media_url VARCHAR(2048),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+	id uuid NOT NULL DEFAULT uuid_generate_v4(),
+	chat_room_id uuid NULL,
+	sender_id uuid NULL,
+	"content" varchar(1000) NULL,
+	media_url varchar(2048) NULL,
+	created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	read_at timestamp NULL,
+	deleted_by_user_id uuid NULL,
+	CONSTRAINT messages_pkey PRIMARY KEY (id),
+	CONSTRAINT messages_chat_room_id_fkey FOREIGN KEY (chat_room_id) REFERENCES chat_rooms(id),
+	CONSTRAINT messages_deleted_by_user_id_fkey FOREIGN KEY (deleted_by_user_id) REFERENCES users(id),
+	CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES users(id)
 );
-
+CREATE INDEX idx_messages_on_chat_room_id ON public.messages USING btree (chat_room_id);
