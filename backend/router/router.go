@@ -23,13 +23,13 @@ func InitRouter(userHandler *user.Handler) {
 	// CORS configuration
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"http://localhost:3000"}
-	config.AllowMethods = []string{"GET", "POST", "PATCH", "DELETE"}
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
 	config.AllowHeaders = []string{"Content-Type", "Authorization"}
 	config.AllowCredentials = true
 	r.Use(cors.New(config))
 
 	r.GET("/", func(c *gin.Context) {
-		time.Sleep(5 * time.Second)
+		//time.Sleep(5 * time.Second)
 		c.String(http.StatusOK, "Welcome Gin Server")
 	})
 
@@ -44,12 +44,12 @@ func InitRouter(userHandler *user.Handler) {
 	})
 
 	// All routes in this group are protected
-	userRoutes := r.Group("/api/user")
+	userRoutes := r.Group("/api/users")
 	userRoutes.Use(middleware.EnsureValidToken())
 	{
 		// Define your routes here, e.g.
-		userRoutes.GET("/profile", userHandler.CreateUser)
-		userRoutes.POST("/update", userHandler.CreateUser)
+		userRoutes.GET("/check", userHandler.HandleOAuth2Callback)
+		userRoutes.POST("/register", userHandler.CreateUser)
 		// etc...
 	}
 

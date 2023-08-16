@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"strconv"
+	"database/sql"
 	"time"
 )
 
@@ -18,13 +18,15 @@ func NewService(repository Repository) Service {
 	}
 }
 
-func (s *service) CreateUser(c context.Context, req *CreateUserReq) (*CreateUserRes, error) {
+func (s *service) CreateUser(c context.Context, req *CreateUserReq, email string) (*CreateUserRes, error) {
+	// Your implementation here
 	ctx, cancel := context.WithTimeout(c, s.timeout)
 	defer cancel()
 
 	u := &User{
-		Username: req.Username,
-		Email:    req.Email,
+		Username:        req.Username,
+		Email:           email,
+		ProfileImageURL: req.ProfileImageURL,
 	}
 
 	r, err := s.Repository.CreateUser(ctx, u)
@@ -33,10 +35,20 @@ func (s *service) CreateUser(c context.Context, req *CreateUserReq) (*CreateUser
 	}
 
 	res := &CreateUserRes{
-		ID:       strconv.Itoa(int(r.ID)),
-		Username: r.Username,
-		Email:    r.Email,
+		Username:        r.Username,
+		ProfileImageURL: r.ProfileImageURL,
 	}
 
 	return res, nil
+
+}
+
+func (s *service) IsUserRegistered(c context.Context, email string) (bool, error) {
+	_, err := s.Repository.FindUserByEmail(c, email)
+	if err == sql.ErrNoRows {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+	return true, nil
 }

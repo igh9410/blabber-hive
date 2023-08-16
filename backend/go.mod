@@ -40,4 +40,5 @@ require (
 require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/google/uuid v1.3.0
 )

@@ -3,6 +3,9 @@ package user
 import (
 	"context"
 	"database/sql"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type DBTX interface {
@@ -21,21 +24,26 @@ func NewRepository(db DBTX) Repository {
 }
 
 func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) {
-	var lastInsertId int
-	query := "INSERT INTO users(username, email) VALUES ($1, $2) returning id"
-	err := r.db.QueryRowContext(ctx, query, user.Username, user.Email).Scan(&lastInsertId)
+	// Generate a UUID for user ID
+	user.ID = uuid.New()
+
+	// Set the current timestamp for CreatedAt
+	user.CreatedAt = time.Now()
+
+	query := "INSERT INTO users(id, username, email, profile_image_url, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id"
+
+	err := r.db.QueryRowContext(ctx, query, user.ID, user.Username, user.Email, user.ProfileImageURL, user.CreatedAt).Scan(&user.ID)
 	if err != nil {
 		return &User{}, err
 	}
 
-	user.ID = int64(lastInsertId)
 	return user, nil
 }
 
-func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+func (r *repository) FindUserByEmail(ctx context.Context, email string) (*User, error) {
 	u := User{}
-	query := "SELECT id, email, username FROM users WHERE email = $1"
-	err := r.db.QueryRowContext(ctx, query, email).Scan(&u.ID, &u.Email, &u.Username)
+	query := "SELECT email, username FROM users WHERE email = $1"
+	err := r.db.QueryRowContext(ctx, query, email).Scan(&u.ID, &u.Email)
 	if err != nil {
 		return &User{}, nil
 	}

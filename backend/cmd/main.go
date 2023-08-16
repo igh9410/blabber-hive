@@ -18,7 +18,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Could not initialize database connection: %s", err)
 	}
-	defer dbConn.Close()
+
+	defer func() {
+		if err := dbConn.Close(); err != nil {
+			log.Printf("Error closing the database: %s", err)
+		}
+	}()
 	log.Println("Database initialized")
 
 	userRep := user.NewRepository(dbConn.GetDB())
