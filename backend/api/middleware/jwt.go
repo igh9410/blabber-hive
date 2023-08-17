@@ -50,6 +50,7 @@ func EnsureValidToken() gin.HandlerFunc {
 		token, err := parseJWT(tokenString, jwtSecretKey)
 
 		if err != nil {
+
 			abortWithUnauthorized(c, err.Error())
 			return
 		}

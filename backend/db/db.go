@@ -16,10 +16,23 @@ func NewDatabase() (*Database, error) {
 
 	// Create the connection string using the retrieved values
 	// Retrieve the values from environment variables
-	password := os.Getenv("SUPABASE_POSTGRES_PASSWORD")
-	domain := "db." + os.Getenv("SUPABASE_DOMAIN")
+	var username string
+	var password string
+	var domain string
+	var connectionString string
 
-	connectionString := fmt.Sprintf("user=postgres password=%s host=%s port=5432 dbname=postgres", password, domain)
+	if os.Getenv("IS_PRODUCTION") == "YES" { // Production Environment
+		username = os.Getenv("POSTGRES_USERNAME")
+		password = os.Getenv("SUPABASE_POSTGRES_PASSWORD")
+		domain = "db." + os.Getenv("SUPABASE_DOMAIN")
+		connectionString = fmt.Sprintf("user=%s password=%s host=%s port=5432 dbname=postgres", username, password, domain)
+	} else {
+		username = os.Getenv("POSTGRES_USERNAME")
+		password = os.Getenv("POSTGRES_PASSWORD")
+		//domain = "db." + os.Getenv("SUPABASE_DOMAIN")
+		connectionString = fmt.Sprintf("postgresql://%s:%s@localhost:5432/blabber_hive?sslmode=disable", username, password)
+	}
+
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		return nil, err
