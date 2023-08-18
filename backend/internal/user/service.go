@@ -19,7 +19,7 @@ func NewService(repository Repository) Service {
 }
 
 func (s *service) CreateUser(c context.Context, req *CreateUserReq, email string) (*CreateUserRes, error) {
-	// Your implementation here
+
 	ctx, cancel := context.WithTimeout(c, s.timeout)
 	defer cancel()
 
