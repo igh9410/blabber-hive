@@ -2,6 +2,7 @@ package main
 
 import (
 	"backend/db"
+
 	"backend/internal/user"
 	"backend/router"
 	"log"
@@ -10,7 +11,7 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load("../.env"); err != nil {
+	if err := godotenv.Load("../.env"); err != nil { // Running in local, must be run on go run . in ./cmd directory
 		log.Println("No .env file found. Using OS environment variables.")
 	}
 

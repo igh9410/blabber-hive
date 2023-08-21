@@ -49,8 +49,8 @@ func (h *Handler) HandleOAuth2Callback(c *gin.Context) {
 }
 
 func (h *Handler) CreateUser(c *gin.Context) {
-	var u CreateUserReq
-	if err := c.ShouldBindJSON(&u); err != nil {
+	var req CreateUserReq
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -68,7 +68,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	res, err := h.Service.CreateUser(c.Request.Context(), &u, emailStr)
+	res, err := h.Service.CreateUser(c.Request.Context(), &req, emailStr)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

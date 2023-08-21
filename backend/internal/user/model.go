@@ -15,6 +15,10 @@ type User struct {
 	CreatedAt       time.Time `json:"created_at"`
 }
 
+type UserDTO struct {
+	Username string `json:"username"`
+}
+
 type CreateUserReq struct {
 	Username        string  `json:"username"`
 	ProfileImageURL *string `json:"profile_image_url,omitempty"`
@@ -25,12 +29,12 @@ type CreateUserRes struct {
 	ProfileImageURL *string `json:"profile_image_url,omitempty"`
 }
 
-type Repository interface {
-	CreateUser(ctx context.Context, user *User) (*User, error)
-	FindUserByEmail(ctx context.Context, email string) (*User, error)
-}
-
 type Service interface {
 	CreateUser(c context.Context, req *CreateUserReq, email string) (*CreateUserRes, error)
 	IsUserRegistered(c context.Context, email string) (bool, error)
+}
+
+type Repository interface {
+	CreateUser(ctx context.Context, user *User) (*User, error)
+	FindUserByEmail(ctx context.Context, email string) (*User, error)
 }

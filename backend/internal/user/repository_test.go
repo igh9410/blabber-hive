@@ -24,7 +24,7 @@ func TestCreateUserRepository(t *testing.T) {
 		ID:              uuid.New(), // Generate a new UUID
 		Username:        "test1",
 		Email:           "test1@gmail.com",
-		ProfileImageURL: nil, // This can be omitted since it's the zero value for a pointer
+		ProfileImageURL: nil, // This can be omitted
 		CreatedAt:       time.Now(),
 	}
 
@@ -35,5 +35,5 @@ func TestCreateUserRepository(t *testing.T) {
 	user, err := r.CreateUser(context.Background(), mockUser)
 	assert.NoError(t, err)
 	assert.NotNil(t, user)
-	// Add more assertions as needed
+
 }

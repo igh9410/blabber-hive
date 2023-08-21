@@ -29,31 +29,6 @@ func (m *MockService) CreateUser(c context.Context, req *CreateUserReq, email st
 
 }
 
-/*
-func TestHandleOAuth2Callback(t *testing.T) {
-	// Initialize Gin engine
-	gin.SetMode(gin.TestMode)
-	r := gin.Default()
-
-	mockService := new(MockService)
-	h := NewHandler(mockService)
-	r.GET("/oauth2callback", h.HandleOAuth2Callback)
-
-	t.Run("User not registered", func(t *testing.T) {
-		mockService.On("IsUserRegistered", testEmail).Return(false, nil)
-
-		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/oauth2callback", nil)
-		req = req.WithContext(context.WithValue(req.Context(), "email", ))
-		r.ServeHTTP(w, req)
-
-		assert.Equal(t, http.StatusFound, w.Code)
-		assert.Equal(t, "/register", w.Header().Get("Location"))
-	})
-
-	// ... other test cases for HandleOAuth2Callback
-} */
-
 func TestCreateUserHandler(t *testing.T) {
 
 	mockService := new(MockService)

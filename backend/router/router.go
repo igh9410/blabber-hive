@@ -2,6 +2,7 @@ package router
 
 import (
 	"backend/api/middleware"
+
 	"backend/internal/user"
 	"context"
 	"log"
@@ -52,6 +53,12 @@ func InitRouter(userHandler *user.Handler) {
 		userRoutes.POST("/register", userHandler.CreateUser)
 		// etc...
 	}
+	/*
+		chatRoutes := r.Group("/ws/chats")
+		chatRoutes.Use(middleware.EnsureValidToken())
+		{
+			chatRoutes.POST("/", chatWsHandler.CreateChatRoom)
+		} */
 
 	srv := &http.Server{
 		Addr:    ":8080",
