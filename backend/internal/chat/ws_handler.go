@@ -2,36 +2,42 @@ package chat
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
-type Handler struct {
+type WsHandler struct {
 	hub *Hub
-	Service
 }
 
-func NewHandler(h *Hub, s Service) *Handler {
-	return &Handler{
-		hub:     h,
-		Service: s,
+func NewWsHandler(h *Hub) *WsHandler {
+	return &WsHandler{
+		hub: h,
 	}
 }
 
-func (h *Handler) CreateChatRoom(c *gin.Context) {
-	var req CreateChatRoomReq
+type CreateRoomReq struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func (h *WsHandler) WsCreateChatRoom(c *gin.Context) {
+	var req CreateRoomReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	res, err := h.Service.CreateChatRoom(c.Request.Context(), &req)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+	h.hub.Rooms[req.ID] = &ChatRoom{
+		ID:        uuid.New(),
+		Clients:   make(map[string]*Client),
+		CreatedAt: time.Now(),
 	}
-	c.JSON(http.StatusCreated, res)
+
+	c.JSON(http.StatusCreated, req)
 }
 
 var upgrader = websocket.Upgrader{
@@ -42,30 +48,30 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-/*
-func (h *Handler) JoinRoom(c *gin.Context) {
+func (h *WsHandler) JoinRoom(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	roomID := c.Param("roomId")
-	clientID := c.Query("userId")
-	username := c.Query("username")
+	roomIDStr := c.Param("chatroomId")
+	roomID, err := uuid.Parse(roomIDStr)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
+		return
+	}
 
 	cl := &Client{
-		Conn:     conn,
-		Message:  make(chan *Message, 10),
-		ID:       clientID,
-		RoomID:   roomID,
-		Username: username,
+		Conn:       conn,
+		Send:       make(chan *Message, 10),
+		ChatRoomID: roomID,
 	}
 
 	m := &Message{
-		Content:  "A new user has joined the room",
-		RoomID:   roomID,
-		Username: username,
+		Content:   "A new user has joined the room",
+		CreatedAt: time.Now(),
 	}
 
 	h.hub.Register <- cl
@@ -75,24 +81,19 @@ func (h *Handler) JoinRoom(c *gin.Context) {
 	cl.readMessage(h.hub)
 }
 
-type RoomRes struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-func (h *Handler) GetRooms(c *gin.Context) {
+func (h *WsHandler) GetRooms(c *gin.Context) {
 	rooms := make([]RoomRes, 0)
 
 	for _, r := range h.hub.Rooms {
 		rooms = append(rooms, RoomRes{
-			ID:   r.ID,
-			Name: r.Name,
+			Clients: r.Clients,
 		})
 	}
 
 	c.JSON(http.StatusOK, rooms)
 }
 
+/*
 type ClientRes struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
@@ -115,4 +116,5 @@ func (h *Handler) GetClients(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, clients)
-} */
+}
+*/

@@ -9,6 +9,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type Room struct {
+	ID      string             `json:"id"`
+	Name    string             `json:"name"`
+	Clients map[string]*Client `json:"clients"`
+}
+
 type ChatRoom struct {
 	ID        uuid.UUID          `json:"id"`
 	Clients   map[string]*Client `json:"clients"`
@@ -38,6 +44,10 @@ type Client struct {
 }
 
 type CreateChatRoomReq struct {
+	Clients map[string]*Client `json:"clients"`
+}
+
+type RoomRes struct {
 	Clients map[string]*Client `json:"clients"`
 }
 

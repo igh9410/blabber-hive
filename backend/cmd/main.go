@@ -3,6 +3,7 @@ package main
 import (
 	"backend/db"
 
+	"backend/internal/chat"
 	"backend/internal/user"
 	"backend/router"
 	"log"
@@ -31,6 +32,9 @@ func main() {
 	userSvc := user.NewService(userRep)
 	userHandler := user.NewHandler(userSvc)
 
-	router.InitRouter(userHandler)
+	hub := chat.NewHub()
+	wsHandler := chat.NewWsHandler(hub)
+
+	router.InitRouter(userHandler, wsHandler)
 
 }

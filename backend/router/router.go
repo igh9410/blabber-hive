@@ -3,6 +3,7 @@ package router
 import (
 	"backend/api/middleware"
 
+	"backend/internal/chat"
 	"backend/internal/user"
 	"context"
 	"log"
@@ -18,7 +19,7 @@ import (
 
 var r *gin.Engine
 
-func InitRouter(userHandler *user.Handler) {
+func InitRouter(userHandler *user.Handler, chatWsHandler *chat.WsHandler) {
 	r = gin.Default()
 
 	// CORS configuration
@@ -53,12 +54,13 @@ func InitRouter(userHandler *user.Handler) {
 		userRoutes.POST("/register", userHandler.CreateUser)
 		// etc...
 	}
-	/*
-		chatRoutes := r.Group("/ws/chats")
-		chatRoutes.Use(middleware.EnsureValidToken())
-		{
-			chatRoutes.POST("/", chatWsHandler.CreateChatRoom)
-		} */
+
+	chatWsRoutes := r.Group("/ws/chats")
+	chatWsRoutes.Use(middleware.EnsureValidToken())
+	{
+		chatWsRoutes.POST("/", chatWsHandler.WsCreateChatRoom)
+		chatWsRoutes.GET("/:chatroomID", chatWsHandler.JoinRoom)
+	}
 
 	srv := &http.Server{
 		Addr:    ":8080",
