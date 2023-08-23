@@ -32,9 +32,13 @@ func main() {
 	userSvc := user.NewService(userRep)
 	userHandler := user.NewHandler(userSvc)
 
+	chatRep := chat.NewRepository(dbConn.GetDB())
+	chatSvc := chat.NewService(chatRep)
+	chatHandler := chat.NewHandler(chatSvc)
+
 	hub := chat.NewHub()
 	wsHandler := chat.NewWsHandler(hub)
 
-	router.InitRouter(userHandler, wsHandler)
+	router.InitRouter(userHandler, chatHandler, wsHandler)
 
 }
