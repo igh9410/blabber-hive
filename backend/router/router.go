@@ -19,12 +19,20 @@ import (
 
 var r *gin.Engine
 
-func InitRouter(userHandler *user.Handler, chatWsHandler *chat.WsHandler) {
+type RouterConfig struct {
+	UserHandler   *user.Handler
+	ChatHandler   *chat.Handler
+	ChatWsHandler *chat.WsHandler
+	// Add future handlers here, e.g.:
+	// FriendHandler *friend.Handler
+}
+
+func InitRouter(cfg *RouterConfig) {
 	r = gin.Default()
 
 	// CORS configuration
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:3000"}
+	config.AllowOrigins = []string{"http://localhost:3000", "http://127.0.0.1:5500"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
 	config.AllowHeaders = []string{"Content-Type", "Authorization"}
 	config.AllowCredentials = true
@@ -50,16 +58,27 @@ func InitRouter(userHandler *user.Handler, chatWsHandler *chat.WsHandler) {
 	userRoutes.Use(middleware.EnsureValidToken())
 	{
 		// Define your routes here, e.g.
-		userRoutes.GET("/check", userHandler.HandleOAuth2Callback)
-		userRoutes.POST("/register", userHandler.CreateUser)
+		userRoutes.GET("/check", cfg.UserHandler.HandleOAuth2Callback)
+		userRoutes.POST("/register", cfg.UserHandler.CreateUser)
 		// etc...
 	}
 
-	chatWsRoutes := r.Group("/ws/chats")
-	chatWsRoutes.Use(middleware.EnsureValidToken())
+	chatRoutes := r.Group("/api/chats")
+	chatRoutes.Use(middleware.EnsureValidToken())
 	{
-		chatWsRoutes.POST("/", chatWsHandler.WsCreateChatRoom)
-		chatWsRoutes.GET("/:chatroomID", chatWsHandler.JoinRoom)
+		// Define your routes here, e.g.
+		chatRoutes.POST("/", cfg.ChatHandler.CreateChatRoom)
+		chatRoutes.GET("/:id", cfg.ChatHandler.GetChatRoom)
+		// etc...
+	}
+
+	// WebSocket api endpoints
+
+	chatWsRoutes := r.Group("/ws/chats")
+	//	chatWsRoutes.Use(middleware.EnsureValidToken())
+	{
+		//chatWsRoutes.POST("/", cfg.ChatWsHandler.WsCreateChatRoom)
+		chatWsRoutes.GET("/:id", cfg.ChatWsHandler.JoinRoom)
 	}
 
 	srv := &http.Server{

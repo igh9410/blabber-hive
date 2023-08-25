@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebSocket Test</title>
+  </head>
+  <body>
+    <h1>WebSocket Chat</h1>
+
+    <textarea id="chatLog" cols="50" rows="20"></textarea><br />
+    <input id="message" type="text" />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+      // Replace 'your_chat_id_here' with the actual chat ID
+      var chatId = "757fb30d-c4b6-478c-b711-502fd011edb2";
+      var ws = new WebSocket(`ws://localhost:8080/ws/chats/${chatId}`);
+
+      ws.onopen = function (event) {
+        console.log("WebSocket is open now.");
+      };
+
+      ws.onmessage = function (event) {
+        console.log("Received a message from the server:", event.data);
+        var chatLog = document.getElementById("chatLog");
+        chatLog.value += event.data + "\n";
+      };
+
+      // Listen for possible errors
+      ws.addEventListener("error", (event) => {
+        console.log("WebSocket error: ", event);
+      });
+
+      ws.onclose = function (event) {
+        console.log("WebSocket is closed now.", event);
+      };
+
+      function sendMessage() {
+        var message = document.getElementById("message").value;
+        console.log("Sending message:", message);
+        ws.send(message);
+      }
+    </script>
+  </body>
+</html>

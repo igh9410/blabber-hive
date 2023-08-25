@@ -2,45 +2,40 @@ package chat
 
 import (
 	"log"
-	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
-func (c *Client) writeMessage() {
-	defer func() {
-		c.Conn.Close()
-	}()
+type Client struct {
+	hub        *Hub
+	conn       *websocket.Conn
+	send       chan []byte
+	chatroomID uuid.UUID
+}
 
-	for msg := range c.Send {
-		err := c.Conn.WriteJSON(msg)
+func (c *Client) readPump() {
+	defer func() {
+		c.hub.unregister <- c
+		c.conn.Close()
+	}()
+	for {
+		_, message, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Printf("Error writing to client %v: %v", c.User.Username, err)
+			log.Println("read:", err)
 			break
 		}
+		c.hub.broadcast <- message
 	}
 }
 
-func (c *Client) readMessage(hub *Hub) {
-	defer func() {
-		hub.Unregister <- c
-		c.Conn.Close()
-	}()
-
+func (c *Client) writePump() {
 	for {
-		_, m, err := c.Conn.ReadMessage()
+		message := <-c.send
+		err := c.conn.WriteMessage(websocket.TextMessage, message)
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
-			}
+			log.Println("write:", err)
 			break
 		}
-
-		msg := &Message{
-			Content:   string(m),
-			CreatedAt: time.Now(),
-		}
-
-		hub.Broadcast <- msg
 	}
 }

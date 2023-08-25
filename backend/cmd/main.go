@@ -37,8 +37,16 @@ func main() {
 	chatHandler := chat.NewHandler(chatSvc)
 
 	hub := chat.NewHub()
-	wsHandler := chat.NewWsHandler(hub)
 
-	router.InitRouter(userHandler, chatHandler, wsHandler)
+	chatWsHandler := chat.NewWsHandler(hub)
+
+	routerConfig := &router.RouterConfig{
+		UserHandler:   userHandler,
+		ChatHandler:   chatHandler,
+		ChatWsHandler: chatWsHandler,
+		// Future handlers can be added here without changing the InitRouter signature
+	}
+
+	router.InitRouter(routerConfig)
 
 }

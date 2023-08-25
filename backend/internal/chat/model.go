@@ -1,24 +1,17 @@
 package chat
 
 import (
-	"backend/internal/user"
 	"context"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 )
 
-type Room struct {
-	ID      string             `json:"id"`
-	Name    string             `json:"name"`
-	Clients map[string]*Client `json:"clients"`
-}
-
 type ChatRoom struct {
-	ID        uuid.UUID          `json:"id"`
-	Clients   map[string]*Client `json:"clients"`
-	CreatedAt time.Time          `json:"created_at"`
+	ID        uuid.UUID `json:"id"`
+	UserID1   uuid.UUID `json:"user_id_1"`
+	UserID2   uuid.UUID `json:"user_id_2"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Message struct {
@@ -32,33 +25,23 @@ type Message struct {
 	DeletedByUserID uuid.UUID `json:"deleted_by_user_id"`
 }
 
-type Client struct {
-	// The WebSocket connection for this client.
-	Conn *websocket.Conn
-	// Channel to send messages to the client.
-	Send chan *Message
-	// Details about the user.
-	User *user.User
-	// The chat room this client is in (if any).
-	ChatRoomID uuid.UUID
-}
-
 type CreateChatRoomReq struct {
-	Clients map[string]*Client `json:"clients"`
-}
-
-type RoomRes struct {
-	Clients map[string]*Client `json:"clients"`
 }
 
 type CreateChatRoomRes struct {
-	Clients map[string]*Client `json:"clients"`
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Service interface {
 	CreateChatRoom(ctx context.Context, req *CreateChatRoomReq) (*CreateChatRoomRes, error)
+	GetChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
 }
 
 type Repository interface {
 	CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*ChatRoom, error)
+	FindChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
+	FetchRecentMessages(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error)
+
+	SaveMessage(ctx context.Context, message *Message) error
 }
