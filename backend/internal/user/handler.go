@@ -33,8 +33,8 @@ func (h *Handler) HandleOAuth2Callback(c *gin.Context) {
 
 	isRegistered, err := h.Service.IsUserRegistered(c.Request.Context(), emailStr)
 	if err != nil {
-		if err == sql.ErrNoRows { // assuming your service returns this error when a user is not found
-			c.Redirect(302, "/register")
+		if err == sql.ErrNoRows {
+			c.Redirect(302, "/api/users/register")
 			return
 		}
 		log.Println("Error checking user registration:", err)
@@ -43,7 +43,8 @@ func (h *Handler) HandleOAuth2Callback(c *gin.Context) {
 	}
 
 	if !isRegistered {
-		c.Redirect(302, "/register")
+		log.Printf("User with email %v is not registered, redirecting to /api/users/register endpoint...", emailStr)
+		c.Redirect(302, "/api/users/register")
 		return
 	}
 }

@@ -18,6 +18,11 @@ type MockService struct {
 	mock.Mock
 }
 
+// FindUserByEmail implements Service.
+func (*MockService) FindUserByEmail(ctx context.Context, email string) (*UserDTO, error) {
+	panic("unimplemented")
+}
+
 func (m *MockService) IsUserRegistered(c context.Context, email string) (bool, error) {
 	args := m.Called(email)
 	return args.Bool(0), args.Error(1)

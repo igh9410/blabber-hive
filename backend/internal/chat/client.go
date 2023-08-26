@@ -21,6 +21,7 @@ func (c *Client) readPump() {
 	}()
 	for {
 		_, message, err := c.conn.ReadMessage()
+		log.Printf("Read message = %v", message)
 		if err != nil {
 			log.Println("read:", err)
 			break
@@ -32,6 +33,7 @@ func (c *Client) readPump() {
 func (c *Client) writePump() {
 	for {
 		message := <-c.send
+		log.Printf("Read message = %v", message)
 		err := c.conn.WriteMessage(websocket.TextMessage, message)
 		if err != nil {
 			log.Println("write:", err)

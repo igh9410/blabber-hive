@@ -16,7 +16,8 @@ type User struct {
 }
 
 type UserDTO struct {
-	Username string `json:"username"`
+	ID       uuid.UUID `json:"id"`
+	Username string    `json:"username"`
 }
 
 type CreateUserReq struct {
@@ -32,6 +33,7 @@ type CreateUserRes struct {
 type Service interface {
 	CreateUser(c context.Context, req *CreateUserReq, email string) (*CreateUserRes, error)
 	IsUserRegistered(c context.Context, email string) (bool, error)
+	FindUserByEmail(ctx context.Context, email string) (*UserDTO, error)
 }
 
 type Repository interface {

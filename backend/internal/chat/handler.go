@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"backend/internal/user"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,11 +12,13 @@ import (
 
 type Handler struct {
 	Service
+	UserService user.Service
 }
 
-func NewHandler(s Service) *Handler {
+func NewHandler(s Service, u user.Service) *Handler {
 	return &Handler{
-		Service: s,
+		Service:     s,
+		UserService: u,
 	}
 }
 
@@ -49,4 +52,20 @@ func (h *Handler) GetChatRoom(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Chat ID %s not found", chatRoomID)})
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+func (h *Handler) JoinChatRoom(c *gin.Context) {
+	userEmail, exists := c.Get("email")
+
+	if !exists {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email does not exist in the context"})
+		return
+	}
+	emailStr := userEmail.(string)
+	user, err := h.UserService.FindUserByEmail(c, emailStr)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("User with email %s not found", emailStr)})
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "Successfully joined the chat room", "user_id": user.ID})
+
 }

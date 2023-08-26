@@ -35,34 +35,30 @@ func (h *WsHandler) JoinRoom(c *gin.Context) {
 		return
 	}
 
-	defer func() {
-		conn.Close()
-	}()
-
 	roomIDStr := c.Param("id")
 	roomID, err := uuid.Parse(roomIDStr)
-	log.Printf("chatroomId = ", roomID)
+	log.Printf("chatroomId = %s", roomID)
 
 	if err != nil {
 		log.Printf("Error occured with room ID %v: %v", roomID, err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
 		return
 	}
-	/*
-		// Create a new client instance
-		client := &Client{
-			hub:  h.hub,
-			conn: conn,
-			send: make(chan []byte, 256),
-			// Add chatroomID to the client if you have it in your Client struct
-			chatroomID: roomID,
-		}
 
-		// Register the new client with the hub
-		client.hub.register <- client
+	// Create a new client instance
+	client := &Client{
+		hub:  h.hub,
+		conn: conn,
+		send: make(chan []byte, 256),
+		// Add chatroomID to the client if you have it in your Client struct
+		chatroomID: roomID,
+	}
 
-		// Start the read and write goroutines for the client
-		go client.writePump()
-		go client.readPump()
-	*/
+	// Register the new client with the hub
+	client.hub.register <- client
+
+	// Start the read and write goroutines for the client
+	go client.writePump()
+	go client.readPump()
+
 }

@@ -34,9 +34,11 @@ func main() {
 
 	chatRep := chat.NewRepository(dbConn.GetDB())
 	chatSvc := chat.NewService(chatRep)
-	chatHandler := chat.NewHandler(chatSvc)
+	chatHandler := chat.NewHandler(chatSvc, userSvc)
 
 	hub := chat.NewHub()
+
+	go hub.Run()
 
 	chatWsHandler := chat.NewWsHandler(hub)
 

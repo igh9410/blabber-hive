@@ -47,7 +47,7 @@ func (s *service) GetChatRoomByID(ctx context.Context, id uuid.UUID) (*ChatRoom,
 }
 
 func (s *service) InitializeWebSocketConnection(conn *websocket.Conn, chatRoomID uuid.UUID) error {
-	// Initialize connection, maybe fetch recent messages and send to client
+	// Initialize connection
 	messages, err := s.Repository.FetchRecentMessages(context.Background(), chatRoomID, 50)
 	if err != nil {
 		return err

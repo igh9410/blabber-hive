@@ -29,7 +29,8 @@ go.work
 .env.local
 .env.production
 
-# txt
+# txt and html
 curl.txt
 jwt.txt
 docker_commands.txt
+index.html
