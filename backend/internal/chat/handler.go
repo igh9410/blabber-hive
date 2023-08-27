@@ -50,6 +50,7 @@ func (h *Handler) GetChatRoom(c *gin.Context) {
 	res, err := h.Service.GetChatRoomByID(c.Request.Context(), chatRoomID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Chat ID %s not found", chatRoomID)})
+		return
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -62,9 +63,13 @@ func (h *Handler) JoinChatRoom(c *gin.Context) {
 		return
 	}
 	emailStr := userEmail.(string)
+	log.Printf("About to call FindUserByEmail with email: %s", emailStr)
 	user, err := h.UserService.FindUserByEmail(c, emailStr)
+
 	if err != nil {
+		log.Printf(err.Error())
 		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("User with email %s not found", emailStr)})
+		return
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "Successfully joined the chat room", "user_id": user.ID})
 

@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 )
 
@@ -62,5 +63,7 @@ func (s *service) FindUserByEmail(c context.Context, email string) (*UserDTO, er
 		ID:       u.ID,
 		Username: u.Username,
 	}
+	log.Printf("Email: %v", email)
+	log.Printf("User ID: %v, Username: %v", r.ID, r.Username)
 	return r, nil
 }
