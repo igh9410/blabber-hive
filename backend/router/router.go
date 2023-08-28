@@ -13,8 +13,12 @@ import (
 	"syscall"
 	"time"
 
+	_ "backend/cmd/docs"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"     // swagger embed files
+	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
 
 var r *gin.Engine
@@ -42,6 +46,9 @@ func InitRouter(cfg *RouterConfig) {
 		//time.Sleep(5 * time.Second)
 		c.String(http.StatusOK, "Welcome Gin Server")
 	})
+
+	// Add Swagger
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// This route is always accessible.
 	r.GET("/api/public", func(c *gin.Context) {

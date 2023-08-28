@@ -84,12 +84,14 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
         SET user_id_1 = $1
         WHERE id = $2
 		    `
+		chatRoom.UserID1 = userID
 	} else { // Fill the user_id_2
 		query = `
         UPDATE chat_rooms
         SET user_id_2 = $1
         WHERE id = $2
 		    `
+		chatRoom.UserID2 = userID
 	}
 
 	_, err2 := r.db.ExecContext(ctx, query, userID, chatRoomID)
