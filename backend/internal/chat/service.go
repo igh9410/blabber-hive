@@ -2,6 +2,7 @@ package chat
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -21,7 +22,7 @@ func NewService(repository Repository) Service {
 	}
 }
 
-func (s *service) CreateChatRoom(c context.Context, req *CreateChatRoomReq) (*CreateChatRoomRes, error) {
+func (s *service) CreateChatRoom(c context.Context) (*CreateChatRoomRes, error) {
 
 	ctx, cancel := context.WithTimeout(c, s.timeout)
 	defer cancel()
@@ -44,6 +45,27 @@ func (s *service) CreateChatRoom(c context.Context, req *CreateChatRoomReq) (*Cr
 
 func (s *service) GetChatRoomByID(ctx context.Context, id uuid.UUID) (*ChatRoom, error) {
 	return s.Repository.FindChatRoomByID(ctx, id)
+}
+
+func (s *service) JoinChatRoomByID(ctx context.Context, chatroomId uuid.UUID, userID uuid.UUID) (*ChatRoom, error) {
+	// First, find the chat room to make sure it exists
+	chatRoom, err := s.Repository.FindChatRoomByID(ctx, chatroomId)
+	if err != nil {
+		return nil, err // Handle error appropriately
+	}
+
+	// Check if the chat room is full
+	if chatRoom.UserID1 != uuid.Nil && chatRoom.UserID2 != uuid.Nil {
+		return nil, errors.New("chat room is full") // Handle this as you see fit
+	}
+
+	res, err := s.Repository.JoinChatRoomByID(ctx, chatroomId, userID)
+	if err != nil {
+		log.Printf("Error occured with joining the chatroom with ID %v and user id with %v: %v", chatroomId, userID, err)
+		return chatRoom, err
+	}
+	return res, nil
+
 }
 
 func (s *service) InitializeWebSocketConnection(conn *websocket.Conn, chatRoomID uuid.UUID) error {

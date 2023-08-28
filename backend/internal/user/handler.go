@@ -60,7 +60,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 
 	if !exists {
 		log.Println("Email does not exist")
-
+		return
 	}
 
 	emailStr, ok := userEmail.(string)

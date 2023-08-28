@@ -57,6 +57,50 @@ func (r *repository) FindChatRoomByID(ctx context.Context, id uuid.UUID) (*ChatR
 	return chatRoom, nil
 }
 
+func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error) {
+	// Find the existing chat room first
+	chatRoom, err := r.FindChatRoomByID(ctx, chatRoomID)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("ChatRoom information = id: %v, user_id_1: %v, user_id_2: %v, created_at: %v", chatRoom.ID, chatRoom.UserID1, chatRoom.UserID2, chatRoom.CreatedAt)
+
+	var query string
+
+	if chatRoom.UserID1 == userID || chatRoom.UserID2 == userID {
+		log.Print("The User is already in the chat.")
+		return nil, errors.New("the user is already in the chat")
+	}
+
+	if chatRoom.UserID1 != uuid.Nil && chatRoom.UserID2 != uuid.Nil {
+		log.Print("The ChatRoom is full.")
+		return nil, errors.New("chatroom is full")
+	}
+
+	if chatRoom.UserID1 == uuid.Nil { // Fill the user_id_1
+		query = `
+        UPDATE chat_rooms
+        SET user_id_1 = $1
+        WHERE id = $2
+		    `
+	} else { // Fill the user_id_2
+		query = `
+        UPDATE chat_rooms
+        SET user_id_2 = $1
+        WHERE id = $2
+		    `
+	}
+
+	_, err2 := r.db.ExecContext(ctx, query, userID, chatRoomID)
+
+	if err2 != nil {
+		return nil, err2
+	}
+	return chatRoom, nil
+
+}
+
 func (r *repository) FetchRecentMessages(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error) {
 	query := `
         SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id

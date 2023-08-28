@@ -23,13 +23,13 @@ func NewHandler(s Service, u user.Service) *Handler {
 }
 
 func (h *Handler) CreateChatRoom(c *gin.Context) {
-	var req CreateChatRoomReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Println("Error occured")
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	res, err := h.Service.CreateChatRoom(c.Request.Context(), &req)
+	/*	var req CreateChatRoomReq
+		if err := c.ShouldBindJSON(&req); err != nil {
+			log.Println("Error occured")
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		} */
+	res, err := h.Service.CreateChatRoom(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -56,21 +56,40 @@ func (h *Handler) GetChatRoom(c *gin.Context) {
 }
 
 func (h *Handler) JoinChatRoom(c *gin.Context) {
-	userEmail, exists := c.Get("email")
 
+	// Extract the id parameter from the request context
+	chatRoomIDStr := c.Param("id")
+
+	// Validate the UUID format
+	chatRoomID, err := uuid.Parse(chatRoomIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
+		return
+	}
+
+	userEmail, exists := c.Get("email")
 	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Email does not exist in the context"})
 		return
 	}
+
 	emailStr := userEmail.(string)
+
 	log.Printf("About to call FindUserByEmail with email: %s", emailStr)
 	user, err := h.UserService.FindUserByEmail(c, emailStr)
 
 	if err != nil {
-		log.Printf(err.Error())
+		log.Print(err.Error())
 		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("User with email %s not found", emailStr)})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": "Successfully joined the chat room", "user_id": user.ID})
+	res, err := h.Service.JoinChatRoomByID(c, chatRoomID, user.ID)
+	if err != nil {
+		log.Print(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Error with joining the chatroom with ID %s and user with ID %s", chatRoomID, user.ID)})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+	//c.JSON(http.StatusOK, gin.H{"status": "Successfully joined the chat room", "user_id": user.ID})
 
 }
