@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,19 +30,4 @@ type CreateChatRoomReq struct {
 type CreateChatRoomRes struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
-}
-
-type Service interface {
-	CreateChatRoom(ctx context.Context) (*CreateChatRoomRes, error)
-	GetChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
-	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
-}
-
-type Repository interface {
-	CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*ChatRoom, error)
-	FindChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
-	FetchRecentMessages(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error)
-	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
-
-	SaveMessage(ctx context.Context, message *Message) error
 }

@@ -8,6 +8,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type Repository interface {
+	CreateUser(ctx context.Context, user *User) (*User, error)
+	FindUserByEmail(ctx context.Context, email string) (*User, error)
+}
+
 type DBTX interface {
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	PrepareContext(context.Context, string) (*sql.Stmt, error)

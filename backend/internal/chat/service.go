@@ -10,6 +10,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type Service interface {
+	CreateChatRoom(ctx context.Context) (*CreateChatRoomRes, error)
+	GetChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
+	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
+}
+
 type service struct {
 	Repository
 	timeout time.Duration

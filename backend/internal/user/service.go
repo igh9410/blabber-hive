@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+type Service interface {
+	CreateUser(c context.Context, req *CreateUserReq, email string) (*CreateUserRes, error)
+	IsUserRegistered(c context.Context, email string) (bool, error)
+	FindUserByEmail(ctx context.Context, email string) (*UserDTO, error)
+}
+
 type service struct {
 	Repository
 	timeout time.Duration

@@ -10,6 +10,15 @@ import (
 	"github.com/google/uuid"
 )
 
+type Repository interface {
+	CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*ChatRoom, error)
+	FindChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
+	FetchRecentMessages(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error)
+	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
+
+	SaveMessage(ctx context.Context, message *Message) error
+}
+
 type DBTX interface {
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	PrepareContext(context.Context, string) (*sql.Stmt, error)

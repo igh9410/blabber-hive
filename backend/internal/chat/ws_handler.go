@@ -47,10 +47,9 @@ func (h *WsHandler) JoinRoom(c *gin.Context) {
 
 	// Create a new client instance
 	client := &Client{
-		hub:  h.hub,
-		conn: conn,
-		send: make(chan []byte, 256),
-		// Add chatroomID to the client if you have it in your Client struct
+		hub:        h.hub,
+		conn:       conn,
+		send:       make(chan []byte, 256),
 		chatroomID: roomID,
 	}
 

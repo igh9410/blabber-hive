@@ -88,3 +88,14 @@ CREATE TABLE messages (
 	CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES users(id)
 );
 CREATE INDEX idx_messages_on_chat_room_id ON public.messages USING btree (chat_room_id);
+
+CREATE TABLE friend_requests (
+    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    sender_id uuid NOT NULL,
+    recipient_id uuid NOT NULL,
+    status varchar(10) NOT NULL DEFAULT 'PENDING',
+    created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT friend_requests_pkey PRIMARY KEY (id),
+    CONSTRAINT friend_requests_recipient_id_fkey FOREIGN KEY (recipient_id) REFERENCES users(id),
+    CONSTRAINT friend_requests_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES users(id)
+);

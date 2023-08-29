@@ -1,7 +1,6 @@
 package user
 
 import (
-	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,6 +29,7 @@ type CreateUserRes struct {
 	ProfileImageURL *string `json:"profile_image_url,omitempty"`
 }
 
+/*
 type Service interface {
 	CreateUser(c context.Context, req *CreateUserReq, email string) (*CreateUserRes, error)
 	IsUserRegistered(c context.Context, email string) (bool, error)
@@ -39,4 +39,4 @@ type Service interface {
 type Repository interface {
 	CreateUser(ctx context.Context, user *User) (*User, error)
 	FindUserByEmail(ctx context.Context, email string) (*User, error)
-}
+} */
