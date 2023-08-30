@@ -24,9 +24,6 @@ type Message struct {
 	DeletedByUserID uuid.UUID `json:"deleted_by_user_id"`
 }
 
-type CreateChatRoomReq struct {
-}
-
 type CreateChatRoomRes struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`

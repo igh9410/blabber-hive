@@ -38,6 +38,12 @@ func NewDatabase() (*Database, error) {
 		return nil, err
 	}
 
+	// Force a connection to verify it works.
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Database{db: db}, nil
 }
 

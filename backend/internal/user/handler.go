@@ -71,7 +71,7 @@ func (h *Handler) CreateUser(c *gin.Context) {
 
 	res, err := h.Service.CreateUser(c.Request.Context(), &req, emailStr)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "The user email or ID is already registerd.  " + err.Error()})
 		return
 	}
 
