@@ -35,3 +35,15 @@ jwt.txt
 docker_commands.txt
 index.html
 index2.html
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+/cmd/__debug_bin*
