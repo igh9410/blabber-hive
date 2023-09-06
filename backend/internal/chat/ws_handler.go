@@ -11,11 +11,13 @@ import (
 
 type WsHandler struct {
 	hub *Hub
+	Service
 }
 
-func NewWsHandler(h *Hub) *WsHandler {
+func NewWsHandler(h *Hub, s Service) *WsHandler {
 	return &WsHandler{
-		hub: h,
+		hub:     h,
+		Service: s,
 	}
 }
 
@@ -27,7 +29,7 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func (h *WsHandler) JoinRoom(c *gin.Context) {
+func (h *WsHandler) RegisterClient(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Printf("Error occured : %v", err.Error())
@@ -45,18 +47,29 @@ func (h *WsHandler) JoinRoom(c *gin.Context) {
 		return
 	}
 
-	// Create a new client instance
-	client := &Client{
-		hub:        h.hub,
-		conn:       conn,
-		send:       make(chan []byte, 256),
-		chatroomID: roomID,
+	// Retrieve email from the context
+	senderEmail, exists := c.Get("email")
+	if !exists {
+		log.Printf("Email not found in context")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Email or Email Not Found"})
+		return
 	}
 
-	// Register the new client with the hub
-	client.hub.register <- client
+	emailStr, ok := senderEmail.(string)
+	if !ok {
+		log.Println("Failed to assert userEmail as string")
+		return
+	}
 
-	// Start the read and write goroutines for the client
+	// Create a new client instance
+	// Register the new client
+	client, err := h.Service.RegisterClient(c.Request.Context(), h.hub, conn, roomID, emailStr)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error occured with registering the client " + err.Error()})
+		return
+	}
+
 	go client.writePump()
 	go client.readPump()
 

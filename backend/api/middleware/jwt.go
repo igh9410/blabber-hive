@@ -66,6 +66,36 @@ func EnsureValidToken() gin.HandlerFunc {
 	}
 }
 
+// WebSocketAuthMiddleware is a middleware that will check the validity of our JWT for WebSocket endpoints.
+func WebSocketAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var expectedIssuer = os.Getenv("SUPABASE_AUTH")
+		var jwtSecretKey = os.Getenv("JWT_SECRET")
+
+		tokenString := c.Query("token")
+		if tokenString == "" {
+			abortWithUnauthorized(c, "token is required")
+			return
+		}
+
+		token, err := parseJWT(tokenString, jwtSecretKey)
+
+		if err != nil {
+			abortWithUnauthorized(c, err.Error())
+			return
+		}
+
+		if isValidToken(token, expectedIssuer) {
+			email := token.Claims.(jwt.MapClaims)["email"].(string)
+			c.Set("email", email)
+			c.Next()
+		} else {
+			abortWithUnauthorized(c, "invalid token")
+		}
+
+	}
+}
+
 func extractTokenFromHeader(c *gin.Context) string {
 	tokenString := c.GetHeader("Authorization")
 	if strings.HasPrefix(strings.ToUpper(tokenString), "BEARER ") {

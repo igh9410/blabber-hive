@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"backend/internal/user"
 	"context"
 	"errors"
 	"log"
@@ -14,16 +15,19 @@ type Service interface {
 	CreateChatRoom(ctx context.Context) (*CreateChatRoomRes, error)
 	GetChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
+	RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, senderEmail string) (*Client, error)
 }
 
 type service struct {
 	Repository
-	timeout time.Duration
+	UserRepository user.Repository
+	timeout        time.Duration
 }
 
-func NewService(repository Repository) Service {
+func NewService(repository Repository, userRepository user.Repository) Service {
 	return &service{
 		repository,
+		userRepository,
 		time.Duration(2) * time.Second,
 	}
 }
@@ -74,6 +78,30 @@ func (s *service) JoinChatRoomByID(ctx context.Context, chatroomId uuid.UUID, us
 
 }
 
+func (s *service) RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, senderEmail string) (*Client, error) {
+
+	sender, err := s.UserRepository.FindUserByEmail(ctx, senderEmail)
+	if err != nil {
+		log.Printf("Error occured with finding the user with email %v", senderEmail)
+		return nil, err
+	}
+
+	senderID := sender.ID
+
+	client := &Client{
+		hub:        hub,
+		conn:       conn,
+		send:       make(chan []byte, 256),
+		chatroomID: chatroomID,
+		senderID:   senderID,
+	}
+
+	client.hub.register <- client
+	return client, nil
+}
+
+/*
+
 func (s *service) InitializeWebSocketConnection(conn *websocket.Conn, chatRoomID uuid.UUID) error {
 	// Initialize connection
 	messages, err := s.Repository.FetchRecentMessages(context.Background(), chatRoomID, 50)
@@ -115,4 +143,4 @@ func (s *service) HandleChatMessages(conn *websocket.Conn, chatRoomID uuid.UUID)
 			break
 		}
 	}
-}
+} */

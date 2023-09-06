@@ -13,6 +13,7 @@ type Client struct {
 	conn       *websocket.Conn
 	send       chan []byte
 	chatroomID uuid.UUID
+	senderID   uuid.UUID
 }
 
 const MaxMessageSize = 1000

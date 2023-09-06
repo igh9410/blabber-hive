@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	_ "backend/cmd/docs"
+	_ "backend/api/docs"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -83,10 +83,10 @@ func InitRouter(cfg *RouterConfig) {
 	// WebSocket api endpoints
 
 	chatWsRoutes := r.Group("/ws/chats")
-	//	chatWsRoutes.Use(middleware.EnsureValidToken())
+	chatWsRoutes.Use(middleware.WebSocketAuthMiddleware())
 	{
 		//chatWsRoutes.POST("/", cfg.ChatWsHandler.WsCreateChatRoom)
-		chatWsRoutes.GET("/:id", cfg.ChatWsHandler.JoinRoom)
+		chatWsRoutes.GET("/:id", cfg.ChatWsHandler.RegisterClient)
 	}
 
 	srv := &http.Server{
