@@ -5,6 +5,7 @@ import (
 
 	"backend/internal/chat"
 	"backend/internal/user"
+	"backend/kafka"
 	"backend/router"
 	"log"
 
@@ -27,6 +28,12 @@ func main() {
 		}
 	}()
 	log.Println("Database initialized")
+
+	kafkaClient, err := kafka.NewKafkaClient()
+	if err != nil {
+		log.Printf("Failed to initialize Kafka cluster connection")
+	}
+	defer kafkaClient.Close()
 
 	userRep := user.NewRepository(dbConn.GetDB())
 	userSvc := user.NewService(userRep)

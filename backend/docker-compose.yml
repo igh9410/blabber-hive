@@ -25,7 +25,7 @@ services:
       - blabber-hive
 
   zookeeper: # ZooKepper for Kafka
-    image: confluentinc/cp-zookeeper:7.3.0
+    image: confluentinc/cp-zookeeper:latest
     container_name: blabber-hive-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -34,7 +34,7 @@ services:
       - blabber-hive
 
   broker: # Kafka Broker
-    image: confluentinc/cp-kafka:7.3.0
+    image: confluentinc/cp-kafka:latest
     container_name: blabber-hive-broker
     ports:
       - "9092:9092"
