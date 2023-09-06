@@ -36,6 +36,7 @@ docker_commands.txt
 index.html
 index2.html
 
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -1,0 +1,75 @@
+services:
+  blabber-hive:
+    image: igh9410/blabber-hive:v1
+    container_name: blabber-hive
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+      - broker
+      - zookeeper
+    env_file:
+      - ./.env
+    environment:
+      SUPABASE_DOMAIN: ${SUPABASE_DOMAIN}
+      SUPABASE_AUTH: ${SUPABASE_AUTH}
+      JWT_SECRET: ${JWT_SECRET}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY}
+      SUPABASE_POSTGRES_PASSWORD: ${SUPABASE_POSTGRES_PASSWORD}
+      IS_PRODUCTION: ${IS_PRODUCTION}
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      GIN_MODE: ${GIN_MODE}
+    networks:
+      - blabber-hive
+
+  zookeeper: # ZooKepper for Kafka
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: blabber-hive-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - blabber-hive
+
+  broker: # Kafka Broker
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: blabber-hive-broker
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - blabber-hive
+
+      # Postgres Image
+  postgres:
+    image: postgres:latest
+    container_name: blabber-hive-postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - blabber-hive
+    environment:
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  redis: # Redis Image
+    image: redis:latest
+    container_name: blabber-hive-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - blabber-hive
+networks:
+  blabber-hive:
+    driver: bridge

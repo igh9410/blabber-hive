@@ -8,7 +8,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- DROP TABLE users;
 
 CREATE TABLE users (
-	id uuid NOT NULL DEFAULT uuid_generate_v4(),
+	id uuid NOT NULL DEFAULT uuid_generate_v1(),
 	username varchar(255) NOT NULL,
 	email varchar(255) NOT NULL,
 	profile_image_url varchar(2048) NULL,
@@ -26,6 +26,7 @@ CREATE TABLE users (
 -- DROP TABLE blocks;
 
 CREATE TABLE blocks (
+	id uuid NOT NULL DEFAULT uuid_generate_v1(),
 	user_id uuid NOT NULL,
 	blocked_user_id uuid NOT NULL,
 	CONSTRAINT blocks_pkey PRIMARY KEY (user_id, blocked_user_id),
@@ -41,7 +42,7 @@ CREATE TABLE blocks (
 -- DROP TABLE chat_rooms;
 
 CREATE TABLE chat_rooms (
-	id uuid NOT NULL DEFAULT uuid_generate_v4(),
+	id uuid NOT NULL DEFAULT uuid_generate_v1(),
 	user_id_1 uuid NULL,
 	user_id_2 uuid NULL,
 	created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -59,6 +60,7 @@ CREATE TABLE chat_rooms (
 -- DROP TABLE friends;
 
 CREATE TABLE friends (
+	id uuid NOT NULL DEFAULT uuid_generate_v1(),
 	user_id uuid NOT NULL,
 	friend_id uuid NOT NULL,
 	CONSTRAINT friends_pkey PRIMARY KEY (user_id, friend_id),
@@ -74,7 +76,7 @@ CREATE TABLE friends (
 -- DROP TABLE messages;
 
 CREATE TABLE messages (
-	id uuid NOT NULL DEFAULT uuid_generate_v4(),
+	id uuid NOT NULL DEFAULT uuid_generate_v1(),
 	chat_room_id uuid NULL,
 	sender_id uuid NULL,
 	"content" varchar(1000) NULL,
@@ -90,7 +92,7 @@ CREATE TABLE messages (
 CREATE INDEX idx_messages_on_chat_room_id ON public.messages USING btree (chat_room_id);
 
 CREATE TABLE friend_requests (
-    id uuid NOT NULL DEFAULT uuid_generate_v4(),
+    id uuid NOT NULL DEFAULT uuid_generate_v1(),
     sender_id uuid NOT NULL,
     recipient_id uuid NOT NULL,
     status varchar(10) NOT NULL DEFAULT 'PENDING',

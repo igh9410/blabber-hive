@@ -30,7 +30,7 @@ func NewDatabase() (*Database, error) {
 		username = os.Getenv("POSTGRES_USERNAME")
 		password = os.Getenv("POSTGRES_PASSWORD")
 		//domain = "db." + os.Getenv("SUPABASE_DOMAIN")
-		connectionString = fmt.Sprintf("postgresql://%s:%s@localhost:5432/blabber_hive?sslmode=disable", username, password)
+		connectionString = fmt.Sprintf("postgresql://%s:%s@postgres:5432/blabber_hive?sslmode=disable", username, password)
 	}
 
 	db, err := sql.Open("postgres", connectionString)
