@@ -1,9 +1,8 @@
-name: Fly Deploy
+name: Fly.io integration
 on:
   push:
     branches:
-      - main
- 
+      - main 
 
 jobs:
   deploy:
@@ -12,7 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --app $FLY_APP_NAME --config backend/fly.toml
+      name: Build Docker Image
+      - run:
+            cd backend | docker build -t blabber-hive:v1 -f Dockerfile.multistage .
+      name: Deploy to Fly.io
+      - run: flyctl deploy --app $FLY_APP_NAME --config backend/fly.toml      
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           FLY_APP_NAME: blabber-hive
