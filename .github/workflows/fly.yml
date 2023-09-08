@@ -14,8 +14,7 @@ jobs:
 
       - name: Set up flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
-      - name: Build Docker Image
-        run: cd backend && docker build -t blabber-hive:v1 -f Dockerfile.multistage .
+
       - name: Deploy to Fly.io
         run: flyctl deploy --app $FLY_APP_NAME --config backend/fly.toml
         env:
