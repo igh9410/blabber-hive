@@ -14,10 +14,8 @@ jobs:
 
       - name: Set up flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
-      - name: Change Directory
-        run: cd backend
       - name: Deploy to Fly.io
-        run: flyctl deploy --app $FLY_APP_NAME
+        run: flyctl deploy --app $FLY_APP_NAME --config backend/fly.toml
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           FLY_APP_NAME: blabber-hive
