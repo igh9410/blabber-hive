@@ -15,7 +15,7 @@ jobs:
       - name: Set up flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Change Directory
-        uses: cd backend
+        run: cd backend
       - name: Deploy to Fly.io
         run: fly deploy --app $FLY_APP_NAME --config backend/fly.toml
         env:
