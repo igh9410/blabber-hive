@@ -5,16 +5,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	confluentKafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
-func NewKafkaClient() (*kafka.AdminClient, error) {
+func NewKafkaClient() (*confluentKafka.AdminClient, error) {
 	// Create a new AdminClient.
 	// AdminClient can also be instantiated using an existing
 	// Producer or Consumer instance, see NewAdminClientFromProducer and
 	// NewAdminClientFromConsumer.
 	// Create a new AdminClient instance
-	adminClient, err := kafka.NewAdminClient(&kafka.ConfigMap{
+	adminClient, err := confluentKafka.NewAdminClient(&confluentKafka.ConfigMap{
 		"bootstrap.servers": "localhost:9092", // Replace with the address of your Kafka broker
 	})
 
@@ -46,12 +46,12 @@ func NewKafkaClient() (*kafka.AdminClient, error) {
 		ctx,
 		// Multiple topics can be created simultaneously
 		// by providing more TopicSpecification structs here.
-		[]kafka.TopicSpecification{{
+		[]confluentKafka.TopicSpecification{{
 			Topic:             topic,
 			NumPartitions:     numPartitions,
 			ReplicationFactor: replicationFactor}},
 		// Admin options
-		kafka.SetAdminOperationTimeout(maxDur))
+		confluentKafka.SetAdminOperationTimeout(maxDur))
 
 	if err != nil {
 		log.Printf("Failed to create topic: %v\n", err)

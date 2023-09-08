@@ -2,7 +2,6 @@ package main
 
 import (
 	"backend/db"
-
 	"backend/internal/chat"
 	"backend/internal/user"
 	"backend/kafka"
