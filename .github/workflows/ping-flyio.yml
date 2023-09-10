@@ -12,7 +12,7 @@ jobs:
         run: |
           for i in {1..11}
           do
-          curl https://blabber-hive.dev.fly
+          curl https://blabber-hive.fly.dev
           sleep 30
           done
 
