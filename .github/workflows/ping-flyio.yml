@@ -1,0 +1,15 @@
+name: Ping Fly.io
+
+on:
+  schedule:
+    - cron: "* * * * *" # Schedule the workflow to run every minute
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Ping Request
+        run: curl -sS -X GET https://blabber-hive.fly.dev
+
+      - name: Check Response
+        run: echo "Response received"
