@@ -1,8 +1,8 @@
-name: Ping Fly.io 
+name: Ping Fly.io
 
 on:
   schedule:
-    - cron: '*/30 * * * * *' # Schedule the workflow to run every 30 seconds
+    - cron: "* * * * *" # Schedule the workflow to run every minute
 jobs:
   ping:
     runs-on: ubuntu-latest
