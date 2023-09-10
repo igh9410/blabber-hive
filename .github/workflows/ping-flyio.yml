@@ -9,7 +9,12 @@ jobs:
 
     steps:
       - name: Send Ping Request
-        run: curl -sS -X GET https://blabber-hive.fly.dev
+        run: |
+          for i in {1..11}
+          do
+          curl https://blabber-hive.dev.fly
+          sleep 30
+          done
 
       - name: Check Response
         run: echo "Response received"
