@@ -28,15 +28,3 @@ type CreateUserRes struct {
 	Username        string  `json:"username"`
 	ProfileImageURL *string `json:"profile_image_url,omitempty"`
 }
-
-/*
-type Service interface {
-	CreateUser(c context.Context, req *CreateUserReq, email string) (*CreateUserRes, error)
-	IsUserRegistered(c context.Context, email string) (bool, error)
-	FindUserByEmail(ctx context.Context, email string) (*UserDTO, error)
-}
-
-type Repository interface {
-	CreateUser(ctx context.Context, user *User) (*User, error)
-	FindUserByEmail(ctx context.Context, email string) (*User, error)
-} */

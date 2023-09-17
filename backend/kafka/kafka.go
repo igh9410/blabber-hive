@@ -65,3 +65,17 @@ func NewKafkaClient() (*confluentKafka.AdminClient, error) {
 
 	return adminClient, nil
 }
+
+func KafkaProducer() (*confluentKafka.Producer, error) {
+	producer, err := confluentKafka.NewProducer(&confluentKafka.ConfigMap{
+		"bootstrap.servers": "localhost:9092", // Replace with your Kafka broker's address
+	})
+
+	if err != nil {
+		log.Printf("Failed to create Kafka producer: %s", err)
+		return nil, err
+	}
+
+	return producer, nil
+
+}

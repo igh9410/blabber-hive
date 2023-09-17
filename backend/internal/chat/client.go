@@ -4,20 +4,33 @@ import (
 	"log"
 	"unicode/utf8"
 
+	confluentKafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 type Client struct {
-	hub        *Hub
-	conn       *websocket.Conn
-	send       chan []byte
-	chatroomID uuid.UUID
-	senderID   uuid.UUID
+	hub           *Hub
+	conn          *websocket.Conn
+	send          chan []byte
+	chatroomID    uuid.UUID
+	senderID      uuid.UUID
+	kafkaProducer *confluentKafka.Producer
 }
 
 const MaxMessageSize = 1000
 const ErrorMessage = "Message is too long. Can't exceed 1000 characters."
+
+func NewClient(hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, senderID uuid.UUID, kafkaProducer *confluentKafka.Producer) *Client {
+	return &Client{
+		hub:           hub,
+		conn:          conn,
+		send:          make(chan []byte, 256),
+		chatroomID:    chatroomID,
+		senderID:      senderID,
+		kafkaProducer: kafkaProducer,
+	}
+}
 
 func (c *Client) readPump() {
 	defer func() {
@@ -66,6 +79,23 @@ func (c *Client) writePump() {
 		if err != nil {
 			log.Println("write:", err)
 			break
+		}
+
+		// Send the message to the Kafka topic "messages"
+		topic := "messages"
+		kafkaMessage := &confluentKafka.Message{
+			TopicPartition: confluentKafka.TopicPartition{
+				Topic:     &topic, // Use the Kafka topic name "messages"
+				Partition: confluentKafka.PartitionAny,
+			},
+			Value: []byte(message),
+		}
+		err = c.kafkaProducer.Produce(kafkaMessage, nil)
+
+		if err != nil {
+			log.Printf("Failed to produce message to Kafka: %v", err)
+		} else {
+			log.Printf("Produced message to Kafka: %v", kafkaMessage.Value)
 		}
 	}
 }

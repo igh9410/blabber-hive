@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	confluentKafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -12,12 +13,14 @@ import (
 type WsHandler struct {
 	hub *Hub
 	Service
+	kafkaProducer *confluentKafka.Producer
 }
 
-func NewWsHandler(h *Hub, s Service) *WsHandler {
+func NewWsHandler(h *Hub, s Service, kafkaProducer *confluentKafka.Producer) *WsHandler {
 	return &WsHandler{
-		hub:     h,
-		Service: s,
+		hub:           h,
+		Service:       s,
+		kafkaProducer: kafkaProducer,
 	}
 }
 
@@ -63,7 +66,7 @@ func (h *WsHandler) RegisterClient(c *gin.Context) {
 
 	// Create a new client instance
 	// Register the new client
-	client, err := h.Service.RegisterClient(c.Request.Context(), h.hub, conn, roomID, emailStr)
+	client, err := h.Service.RegisterClient(c.Request.Context(), h.hub, conn, roomID, emailStr, h.kafkaProducer)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error occured with registering the client " + err.Error()})

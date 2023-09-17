@@ -34,19 +34,25 @@ func main() {
 	}
 	defer kafkaClient.Close()
 
+	kafkaProducer, err := kafka.KafkaProducer()
+	if err != nil {
+		log.Printf("Failed to initialize Kafka producer")
+	}
+	defer kafkaProducer.Close()
+
 	userRep := user.NewRepository(dbConn.GetDB())
 	userSvc := user.NewService(userRep)
 	userHandler := user.NewHandler(userSvc)
 
 	chatRep := chat.NewRepository(dbConn.GetDB())
-	chatSvc := chat.NewService(chatRep, userRep)
+	chatSvc := chat.NewService(chatRep, userRep, kafkaProducer)
 	chatHandler := chat.NewHandler(chatSvc, userSvc)
 
 	hub := chat.NewHub()
 
 	go hub.Run()
 
-	chatWsHandler := chat.NewWsHandler(hub, chatSvc)
+	chatWsHandler := chat.NewWsHandler(hub, chatSvc, kafkaProducer)
 
 	routerConfig := &router.RouterConfig{
 		UserHandler:   userHandler,
