@@ -16,7 +16,7 @@ type Service interface {
 	CreateChatRoom(ctx context.Context) (*CreateChatRoomRes, error)
 	GetChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
-	RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, senderEmail string, kafkaProducer *confluentKafka.Producer) (*Client, error)
+	RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error)
 }
 
 type service struct {
@@ -81,16 +81,11 @@ func (s *service) JoinChatRoomByID(ctx context.Context, chatroomId uuid.UUID, us
 
 }
 
-func (s *service) RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, senderEmail string, kafkaProducer *confluentKafka.Producer) (*Client, error) {
+func (s *service) RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error) {
 
-	sender, err := s.UserRepository.FindUserByEmail(ctx, senderEmail)
-	if err != nil {
-		log.Printf("Error occured with finding the user with email %v", senderEmail)
-		return nil, err
-	}
+	senderID := userID
 
-	senderID := sender.ID
-
+	// Create a new client
 	client := NewClient(hub, conn, chatroomID, senderID, kafkaProducer)
 
 	client.hub.register <- client
