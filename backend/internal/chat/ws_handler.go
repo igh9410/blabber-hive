@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	confluentKafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
@@ -12,12 +13,14 @@ import (
 type WsHandler struct {
 	hub *Hub
 	Service
+	kafkaProducer *confluentKafka.Producer
 }
 
-func NewWsHandler(h *Hub, s Service) *WsHandler {
+func NewWsHandler(h *Hub, s Service, kafkaProducer *confluentKafka.Producer) *WsHandler {
 	return &WsHandler{
-		hub:     h,
-		Service: s,
+		hub:           h,
+		Service:       s,
+		kafkaProducer: kafkaProducer,
 	}
 }
 
@@ -47,29 +50,30 @@ func (h *WsHandler) RegisterClient(c *gin.Context) {
 		return
 	}
 
-	// Retrieve email from the context
-	senderEmail, exists := c.Get("email")
+	// Get the user ID from the context
+	userIDStr, exists := c.Get("user_id")
 	if !exists {
-		log.Printf("Email not found in context")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Email or Email Not Found"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID does not exist in the context"})
 		return
 	}
 
-	emailStr, ok := senderEmail.(string)
-	if !ok {
-		log.Println("Failed to assert userEmail as string")
+	// Validate the UUID format
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
 		return
 	}
 
 	// Create a new client instance
 	// Register the new client
-	client, err := h.Service.RegisterClient(c.Request.Context(), h.hub, conn, roomID, emailStr)
+	client, err := h.Service.RegisterClient(c.Request.Context(), h.hub, conn, roomID, userID, h.kafkaProducer)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error occured with registering the client " + err.Error()})
 		return
 	}
 
+	// Start the client's read and write pumps
 	go client.writePump()
 	go client.readPump()
 

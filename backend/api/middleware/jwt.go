@@ -57,7 +57,9 @@ func EnsureValidToken() gin.HandlerFunc {
 
 		if isValidToken(token, expectedIssuer) {
 			email := token.Claims.(jwt.MapClaims)["email"].(string)
+			sub := token.Claims.(jwt.MapClaims)["sub"].(string)
 			c.Set("email", email)
+			c.Set("user_id", sub)
 			c.Next()
 		} else {
 			abortWithUnauthorized(c, "invalid token")
@@ -87,7 +89,9 @@ func WebSocketAuthMiddleware() gin.HandlerFunc {
 
 		if isValidToken(token, expectedIssuer) {
 			email := token.Claims.(jwt.MapClaims)["email"].(string)
+			sub := token.Claims.(jwt.MapClaims)["sub"].(string)
 			c.Set("email", email)
+			c.Set("user_id", sub)
 			c.Next()
 		} else {
 			abortWithUnauthorized(c, "invalid token")

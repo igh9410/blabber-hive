@@ -5,10 +5,12 @@ import (
 	"database/sql"
 	"log"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Service interface {
-	CreateUser(c context.Context, req *CreateUserReq, email string) (*CreateUserRes, error)
+	CreateUser(c context.Context, req *CreateUserReq, userID uuid.UUID, email string) (*CreateUserRes, error)
 	IsUserRegistered(c context.Context, email string) (bool, error)
 	FindUserByEmail(ctx context.Context, email string) (*UserDTO, error)
 }
@@ -25,12 +27,13 @@ func NewService(repository Repository) Service {
 	}
 }
 
-func (s *service) CreateUser(c context.Context, req *CreateUserReq, email string) (*CreateUserRes, error) {
+func (s *service) CreateUser(c context.Context, req *CreateUserReq, userID uuid.UUID, email string) (*CreateUserRes, error) {
 
 	ctx, cancel := context.WithTimeout(c, s.timeout)
 	defer cancel()
 
 	u := &User{
+		ID:              userID,
 		Username:        req.Username,
 		Email:           email,
 		ProfileImageURL: req.ProfileImageURL,

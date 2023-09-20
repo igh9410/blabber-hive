@@ -1,13 +1,13 @@
 package chat
 
 import (
+	"backend/internal/common"
 	"backend/internal/user"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -33,14 +33,11 @@ func (h *Handler) CreateChatRoom(c *gin.Context) {
 }
 
 func (h *Handler) GetChatRoom(c *gin.Context) {
-	// Extract the id parameter from the request context
-	chatRoomIDStr := c.Param("id")
+	// Extract ChatRoomID from the context
+	chatRoomID, err := common.ChatRoomIDValidator(c)
 
-	// Validate the UUID format
-	chatRoomID, err := uuid.Parse(chatRoomIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
-		return
+		log.Printf("Error occured with chat room ID %v: %v", chatRoomID, err.Error())
 	}
 	res, err := h.Service.GetChatRoomByID(c.Request.Context(), chatRoomID)
 	if err != nil {
@@ -51,40 +48,25 @@ func (h *Handler) GetChatRoom(c *gin.Context) {
 }
 
 func (h *Handler) JoinChatRoom(c *gin.Context) {
+	// Extract ChatRoomID from the context
+	chatRoomID, err := common.ChatRoomIDValidator(c)
 
-	// Extract the id parameter from the request context
-	chatRoomIDStr := c.Param("id")
-
-	// Validate the UUID format
-	chatRoomID, err := uuid.Parse(chatRoomIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
-		return
+		log.Printf("Error occured with chat room ID %v: %v", chatRoomID, err.Error())
 	}
 
-	userEmail, exists := c.Get("email")
-	if !exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email does not exist in the context"})
-		return
+	// Extract UserID from the context
+	userID, err := common.UserIDValidator(c)
+	if err != nil {
+		log.Printf("Error occured with user ID %v: %v", userID, err.Error())
 	}
 
-	emailStr := userEmail.(string)
-
-	log.Printf("About to call FindUserByEmail with email: %s", emailStr)
-	user, err := h.UserService.FindUserByEmail(c, emailStr)
-
+	res, err := h.Service.JoinChatRoomByID(c, chatRoomID, userID)
 	if err != nil {
 		log.Print(err.Error())
-		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("User with email %s not found", emailStr)})
-		return
-	}
-	res, err := h.Service.JoinChatRoomByID(c, chatRoomID, user.ID)
-	if err != nil {
-		log.Print(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Error with joining the chatroom with ID %s and user with ID %s", chatRoomID, user.ID)})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Error with joining the chatroom with ID %s and user with ID %s", chatRoomID, userID)})
 		return
 	}
 	c.JSON(http.StatusOK, res)
-	//c.JSON(http.StatusOK, gin.H{"status": "Successfully joined the chat room", "user_id": user.ID})
 
 }

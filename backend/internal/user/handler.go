@@ -1,6 +1,7 @@
 package user
 
 import (
+	"backend/internal/common"
 	"database/sql"
 	"log"
 	"net/http"
@@ -56,20 +57,19 @@ func (h *Handler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	userEmail, exists := c.Get("email")
-
-	if !exists {
-		log.Println("Email does not exist")
+	userID, err := common.UserIDValidator(c)
+	if err != nil {
+		log.Printf("Error occured with user ID %v: %v", userID, err.Error())
 		return
 	}
 
-	emailStr, ok := userEmail.(string)
-	if !ok {
-		log.Println("Failed to assert userEmail as string")
+	userEmail, err := common.EmailValidator(c)
+	if err != nil {
+		log.Printf("Error occured with user email %v: %v", userEmail, err.Error())
 		return
 	}
 
-	res, err := h.Service.CreateUser(c.Request.Context(), &req, emailStr)
+	res, err := h.Service.CreateUser(c.Request.Context(), &req, userID, userEmail)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "The user email or ID is already registerd.  " + err.Error()})
 		return
