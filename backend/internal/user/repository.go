@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Repository interface {
@@ -29,8 +27,6 @@ func NewRepository(db DBTX) Repository {
 }
 
 func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) {
-	// Generate a UUID for user ID
-	user.ID = uuid.New()
 
 	// Set the current timestamp for CreatedAt
 	user.CreatedAt = time.Now()

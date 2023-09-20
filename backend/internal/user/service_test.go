@@ -34,11 +34,11 @@ func TestCreateUserService(t *testing.T) {
 	}
 
 	s := NewService(mockRepo)
-
+	testID := mockRepo.user.ID
 	res, err := s.CreateUser(context.Background(), &CreateUserReq{
 		Username:        testUsername,
 		ProfileImageURL: nil,
-	}, testEmail)
+	}, testID, testEmail)
 
 	assert.NoError(t, err)
 	assert.Equal(t, testUsername, res.Username)
@@ -49,7 +49,7 @@ func TestCreateUserService(t *testing.T) {
 	_, err = s.CreateUser(context.Background(), &CreateUserReq{
 		Username:        testUsername,
 		ProfileImageURL: nil,
-	}, testEmail)
+	}, testID, testEmail)
 
 	assert.Error(t, err)
 }

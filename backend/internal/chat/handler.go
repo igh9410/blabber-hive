@@ -1,13 +1,13 @@
 package chat
 
 import (
+	"backend/internal/common"
 	"backend/internal/user"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -33,14 +33,11 @@ func (h *Handler) CreateChatRoom(c *gin.Context) {
 }
 
 func (h *Handler) GetChatRoom(c *gin.Context) {
-	// Extract the id parameter from the request context
-	chatRoomIDStr := c.Param("id")
+	// Extract ChatRoomID from the context
+	chatRoomID, err := common.ChatRoomIDValidator(c)
 
-	// Validate the UUID format
-	chatRoomID, err := uuid.Parse(chatRoomIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
-		return
+		log.Printf("Error occured with chat room ID %v: %v", chatRoomID, err.Error())
 	}
 	res, err := h.Service.GetChatRoomByID(c.Request.Context(), chatRoomID)
 	if err != nil {
@@ -51,30 +48,18 @@ func (h *Handler) GetChatRoom(c *gin.Context) {
 }
 
 func (h *Handler) JoinChatRoom(c *gin.Context) {
+	// Extract ChatRoomID from the context
+	chatRoomID, err := common.ChatRoomIDValidator(c)
 
-	// Extract the id parameter from the request context
-	chatRoomIDStr := c.Param("id")
-
-	// Validate the UUID format
-	chatRoomID, err := uuid.Parse(chatRoomIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
-		return
+		log.Printf("Error occured with chat room ID %v: %v", chatRoomID, err.Error())
 	}
 
-	userIDStr, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID does not exist in the context"})
-		return
-	}
-
-	// Validate the UUID format
-	userID, err := uuid.Parse(userIDStr.(string))
+	// Extract UserID from the context
+	userID, err := common.UserIDValidator(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid UUID format"})
-		return
+		log.Printf("Error occured with user ID %v: %v", userID, err.Error())
 	}
-	log.Println("User ID: ", userID)
 
 	res, err := h.Service.JoinChatRoomByID(c, chatRoomID, userID)
 	if err != nil {
