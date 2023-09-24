@@ -28,6 +28,12 @@ type UserInChatRoom struct {
 	ChatRoomID uuid.UUID `json:"chat_room_id"`
 }
 
+type ChatRoomInfo struct {
+	ID        uuid.UUID        `json:"id"`
+	UserList  []UserInChatRoom `json:"user_list"`
+	CreatedAt time.Time        `json:"created_at"`
+}
+
 type CreateChatRoomRes struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`

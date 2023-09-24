@@ -13,9 +13,9 @@ import (
 type Repository interface {
 	CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*ChatRoom, error)
 	FindChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
+	FindChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error)
 	FetchRecentMessages(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
-
 	SaveMessage(ctx context.Context, message *Message) error
 }
 
@@ -65,6 +65,47 @@ func (r *repository) FindChatRoomByID(ctx context.Context, id uuid.UUID) (*ChatR
 		return nil, err
 	}
 	return chatRoom, nil
+}
+
+// FindChatRoomInfoByID implements Repository.
+func (r *repository) FindChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error) {
+	chatRoomInfo := &ChatRoomInfo{}
+
+	query := "SELECT uicr.user_id, uicr.chat_room_id FROM users_in_chat_rooms AS uicr INNER JOIN chat_rooms AS cr ON uicr.chat_room_id = cr.id WHERE cr.id = $1"
+
+	rows, err := r.db.QueryContext(ctx, query, chatRoomID)
+	if err != nil {
+		log.Printf("Failed to fetch chat room info, err: %v", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	// Create a slice to store user IDs associated with the chat room.
+	usersInChatRoom := make([]UserInChatRoom, 0)
+
+	for rows.Next() {
+		var userInChatRoom UserInChatRoom
+		err := rows.Scan(&userInChatRoom.UserID, &userInChatRoom.ChatRoomID)
+		if err != nil {
+			log.Printf("Failed to scan chat room info, err: %v", err)
+			return nil, err
+		}
+		log.Printf("User ID: %v", userInChatRoom.UserID)
+		usersInChatRoom = append(usersInChatRoom, userInChatRoom)
+	}
+
+	// Set the chat room ID in the chat room info.
+	chatRoomInfo.ID = chatRoomID
+
+	// Set the user IDs in the chat room info.
+	chatRoomInfo.UserList = make([]UserInChatRoom, 0, len(usersInChatRoom))
+	for _, userInChatRoom := range usersInChatRoom {
+		chatRoomInfo.UserList = append(chatRoomInfo.UserList, UserInChatRoom{ID: userInChatRoom.ID, UserID: userInChatRoom.UserID, ChatRoomID: userInChatRoom.ChatRoomID})
+	}
+
+	return chatRoomInfo, nil
+
 }
 
 func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error) {

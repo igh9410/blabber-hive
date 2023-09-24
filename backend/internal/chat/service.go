@@ -14,6 +14,7 @@ import (
 type Service interface {
 	CreateChatRoom(ctx context.Context) (*CreateChatRoomRes, error)
 	GetChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
+	GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
 	RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error)
 }
@@ -75,6 +76,16 @@ func (s *service) JoinChatRoomByID(ctx context.Context, chatroomId uuid.UUID, us
 	}
 	return res, nil
 
+}
+
+// GetChatRoomInfoByID implements Service.
+func (s *service) GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error) {
+	chatRoomInfo, err := s.Repository.FindChatRoomInfoByID(ctx, chatRoomID)
+	if err != nil {
+		log.Printf("Error occured with finding chat room info by ID %v: %v", chatRoomID, err)
+		return nil, err
+	}
+	return chatRoomInfo, nil
 }
 
 func (s *service) RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error) {
