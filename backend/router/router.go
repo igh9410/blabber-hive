@@ -76,7 +76,7 @@ func InitRouter(cfg *RouterConfig) {
 		// Define your routes here, e.g.
 		chatRoutes.POST("/", cfg.ChatHandler.CreateChatRoom)
 		chatRoutes.GET("/:id", cfg.ChatHandler.GetChatRoom)
-		chatRoutes.POST("/:id/join", cfg.ChatHandler.JoinChatRoom)
+		chatRoutes.POST("/:id", cfg.ChatHandler.JoinChatRoom)
 		// etc...
 	}
 

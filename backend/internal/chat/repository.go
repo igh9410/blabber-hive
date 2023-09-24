@@ -41,7 +41,7 @@ func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*C
 	// Set the current timestamp for CreatedAt
 	chatRoom.CreatedAt = time.Now()
 
-	query := "INSERT INTO chat_rooms(id, user_id_1, user_id_2, created_at) VALUES ($1, NULL, NULL, $2) RETURNING id"
+	query := "INSERT INTO chat_rooms(id, created_at) VALUES ($1, $2) RETURNING id"
 
 	err := r.db.QueryRowContext(ctx, query, chatRoom.ID, chatRoom.CreatedAt).Scan(&chatRoom.ID)
 	if err != nil {
@@ -55,8 +55,9 @@ func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*C
 
 func (r *repository) FindChatRoomByID(ctx context.Context, id uuid.UUID) (*ChatRoom, error) {
 	chatRoom := &ChatRoom{}
-	query := "SELECT id, user_id_1, user_id_2, created_at FROM chat_rooms WHERE id = $1"
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&chatRoom.ID, &chatRoom.UserID1, &chatRoom.UserID2, &chatRoom.CreatedAt)
+	query := "SELECT id,created_at FROM chat_rooms WHERE id = $1"
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&chatRoom.ID, &chatRoom.CreatedAt)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("chat room not found") // or a custom error indicating not found
@@ -73,35 +74,8 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
 		return nil, err
 	}
 
-	log.Printf("ChatRoom information = id: %v, user_id_1: %v, user_id_2: %v, created_at: %v", chatRoom.ID, chatRoom.UserID1, chatRoom.UserID2, chatRoom.CreatedAt)
-
-	var query string
-
-	if chatRoom.UserID1 == userID || chatRoom.UserID2 == userID {
-		log.Print("The User is already in the chat.")
-		return nil, errors.New("the user is already in the chat")
-	}
-
-	if chatRoom.UserID1 != uuid.Nil && chatRoom.UserID2 != uuid.Nil {
-		log.Print("The ChatRoom is full.")
-		return nil, errors.New("chatroom is full")
-	}
-
-	if chatRoom.UserID1 == uuid.Nil { // Fill the user_id_1
-		query = `
-        UPDATE chat_rooms
-        SET user_id_1 = $1
-        WHERE id = $2
-		    `
-		chatRoom.UserID1 = userID
-	} else { // Fill the user_id_2
-		query = `
-        UPDATE chat_rooms
-        SET user_id_2 = $1
-        WHERE id = $2
-		    `
-		chatRoom.UserID2 = userID
-	}
+	// INSERT into chat rooms, UNIQUE constraint will prevent duplicates
+	query := `INSERT INTO users_in_chat_rooms (user_id, chat_room_id) VALUES ($1, $2)`
 
 	_, err2 := r.db.ExecContext(ctx, query, userID, chatRoomID)
 

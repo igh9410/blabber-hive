@@ -3,7 +3,6 @@ package chat
 import (
 	"backend/internal/user"
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -67,10 +66,7 @@ func (s *service) JoinChatRoomByID(ctx context.Context, chatroomId uuid.UUID, us
 		return nil, err // Handle error appropriately
 	}
 
-	// Check if the chat room is full
-	if chatRoom.UserID1 != uuid.Nil && chatRoom.UserID2 != uuid.Nil {
-		return nil, errors.New("chat room is full") // Handle this as you see fit
-	}
+	// Next, find the user to make sure it exists
 
 	res, err := s.Repository.JoinChatRoomByID(ctx, chatroomId, userID)
 	if err != nil {
