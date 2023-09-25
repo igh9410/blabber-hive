@@ -8,8 +8,6 @@ import (
 
 type ChatRoom struct {
 	ID        uuid.UUID `json:"id"`
-	UserID1   uuid.UUID `json:"user_id_1"`
-	UserID2   uuid.UUID `json:"user_id_2"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -22,6 +20,18 @@ type Message struct {
 	CreatedAt       time.Time `json:"created_at"`
 	ReadAt          time.Time `json:"read_at"`
 	DeletedByUserID uuid.UUID `json:"deleted_by_user_id"`
+}
+
+type UserInChatRoom struct {
+	ID         int       `json:"id"`
+	UserID     uuid.UUID `json:"user_id"`
+	ChatRoomID uuid.UUID `json:"chat_room_id"`
+}
+
+type ChatRoomInfo struct {
+	ID        uuid.UUID        `json:"id"`
+	UserList  []UserInChatRoom `json:"user_list"`
+	CreatedAt time.Time        `json:"created_at"`
 }
 
 type CreateChatRoomRes struct {

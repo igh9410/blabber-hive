@@ -39,7 +39,7 @@ func (h *Handler) GetChatRoom(c *gin.Context) {
 	if err != nil {
 		log.Printf("Error occured with chat room ID %v: %v", chatRoomID, err.Error())
 	}
-	res, err := h.Service.GetChatRoomByID(c.Request.Context(), chatRoomID)
+	res, err := h.Service.GetChatRoomInfoByID(c.Request.Context(), chatRoomID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Chat ID %s not found", chatRoomID)})
 		return

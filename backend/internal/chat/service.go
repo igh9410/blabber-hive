@@ -3,7 +3,6 @@ package chat
 import (
 	"backend/internal/user"
 	"context"
-	"errors"
 	"log"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 type Service interface {
 	CreateChatRoom(ctx context.Context) (*CreateChatRoomRes, error)
 	GetChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
+	GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
 	RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error)
 }
@@ -67,10 +67,7 @@ func (s *service) JoinChatRoomByID(ctx context.Context, chatroomId uuid.UUID, us
 		return nil, err // Handle error appropriately
 	}
 
-	// Check if the chat room is full
-	if chatRoom.UserID1 != uuid.Nil && chatRoom.UserID2 != uuid.Nil {
-		return nil, errors.New("chat room is full") // Handle this as you see fit
-	}
+	// Next, find the user to make sure it exists
 
 	res, err := s.Repository.JoinChatRoomByID(ctx, chatroomId, userID)
 	if err != nil {
@@ -79,6 +76,16 @@ func (s *service) JoinChatRoomByID(ctx context.Context, chatroomId uuid.UUID, us
 	}
 	return res, nil
 
+}
+
+// GetChatRoomInfoByID implements Service.
+func (s *service) GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error) {
+	chatRoomInfo, err := s.Repository.FindChatRoomInfoByID(ctx, chatRoomID)
+	if err != nil {
+		log.Printf("Error occured with finding chat room info by ID %v: %v", chatRoomID, err)
+		return nil, err
+	}
+	return chatRoomInfo, nil
 }
 
 func (s *service) RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error) {
