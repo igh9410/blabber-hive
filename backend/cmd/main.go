@@ -39,7 +39,18 @@ func main() {
 		log.Printf("Failed to initialize Kafka producer")
 	}
 	defer kafkaProducer.Close()
-
+	/*
+		// Kafka consumer configuration
+		consumer, err := kafka.KafkaConsumer(&kafka.ConfigMap{
+			"bootstrap.servers": "your_kafka_bootstrap_servers",
+			"group.id":          "your_group_id",
+			"auto.offset.reset": "earliest",
+		})
+		if err != nil {
+			panic(err)
+		}
+		defer consumer.Close()
+	*/
 	userRep := user.NewRepository(dbConn.GetDB())
 	userSvc := user.NewService(userRep)
 	userHandler := user.NewHandler(userSvc)

@@ -12,7 +12,7 @@ type ChatRoom struct {
 }
 
 type Message struct {
-	ID              uuid.UUID `json:"id"`
+	ID              int       `json:"id"`
 	ChatRoomID      uuid.UUID `json:"chat_room_id"`
 	SenderID        uuid.UUID `json:"sender_id"`
 	Content         string    `json:"content"`

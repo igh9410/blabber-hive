@@ -1,7 +1,9 @@
 package chat
 
 import (
+	"encoding/json"
 	"log"
+	"time"
 	"unicode/utf8"
 
 	confluentKafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -63,10 +65,10 @@ func (c *Client) readPump() {
 func (c *Client) writePump() {
 	for {
 
-		message := <-c.send
+		messageContent := <-c.send
 		// Check message length in terms of characters
-		if utf8.RuneCountInString(string(message)) > MaxMessageSize {
-			log.Printf("Message too long: %d characters", utf8.RuneCountInString(string(message)))
+		if utf8.RuneCountInString(string(messageContent)) > MaxMessageSize {
+			log.Printf("Message too long: %d characters", utf8.RuneCountInString(string(messageContent)))
 
 			// Send an error message to the client
 			c.send <- []byte(ErrorMessage)
@@ -74,11 +76,28 @@ func (c *Client) writePump() {
 			continue
 		}
 
-		log.Printf("Write message = %v", string(message))
-		err := c.conn.WriteMessage(websocket.TextMessage, message)
+		log.Printf("Write message = %v", string(messageContent))
+		err := c.conn.WriteMessage(websocket.TextMessage, messageContent)
 		if err != nil {
 			log.Println("write:", err)
 			break
+		}
+
+		// Construct the message
+		msg := &Message{
+			ChatRoomID: c.chatroomID,           // Using the client's chatroomID
+			SenderID:   c.senderID,             // Using the client's senderID
+			Content:    string(messageContent), // Using the received message content
+			CreatedAt:  time.Now(),             // Using the current time for CreatedAt
+			// Other fields can be set as per your requirements
+		}
+
+		// Convert the message to JSON
+		jsonMessage, err := json.Marshal(msg)
+		if err != nil {
+			log.Printf("Failed to marshal message: %v", err)
+
+			continue
 		}
 
 		// Send the message to the Kafka topic "messages"
@@ -88,7 +107,7 @@ func (c *Client) writePump() {
 				Topic:     &topic, // Use the Kafka topic name "messages"
 				Partition: confluentKafka.PartitionAny,
 			},
-			Value: []byte(message),
+			Value: []byte(jsonMessage),
 		}
 		err = c.kafkaProducer.Produce(kafkaMessage, nil)
 
