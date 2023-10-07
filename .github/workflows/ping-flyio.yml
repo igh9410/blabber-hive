@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Send Ping Request
         run: |
-          for i in {1..11}
+          for i in {1..16}
           do
           curl https://blabber-hive.fly.dev
           sleep 30
