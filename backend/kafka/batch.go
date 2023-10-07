@@ -3,67 +3,57 @@ package kafka
 import (
 	"backend/internal/chat"
 	"log"
-	"sync"
 	"time"
 )
 
+const (
+	batchSize     = 100             // Change as per your requirement
+	batchInterval = 5 * time.Second // Change as per your requirement
+)
+
 type BatchProcessor struct {
-	mu        sync.Mutex
-	buffer    []chat.Message
-	maxSize   int
-	maxWait   time.Duration
-	saveFunc  func([]chat.Message) error
-	waitGroup sync.WaitGroup
+	Messages    []chat.Message
+	InsertFunc  func([]chat.Message) error // Function to insert messages into Postgres
+	BatchSize   int
+	BatchTicker *time.Ticker
 }
 
-func NewBatchProcessor(maxSize int, maxWait time.Duration, saveFunc func([]chat.Message) error) *BatchProcessor {
+func NewBatchProcessor(insertFunc func([]chat.Message) error, batchSize int, batchInterval time.Duration) *BatchProcessor {
 	bp := &BatchProcessor{
-		buffer:   make([]chat.Message, 0, maxSize),
-		maxSize:  maxSize,
-		maxWait:  maxWait,
-		saveFunc: saveFunc,
+		Messages:    make([]chat.Message, 0, batchSize),
+		InsertFunc:  insertFunc,
+		BatchSize:   batchSize,
+		BatchTicker: time.NewTicker(batchInterval),
 	}
-	bp.waitGroup.Add(1)
+
 	go bp.run()
 	return bp
 }
 
-func (bp *BatchProcessor) AddMessage(msg chat.Message) {
-	bp.mu.Lock()
-	defer bp.mu.Unlock()
-
-	bp.buffer = append(bp.buffer, msg)
-	if len(bp.buffer) >= bp.maxSize {
+func (bp *BatchProcessor) AddMessage(message chat.Message) {
+	bp.Messages = append(bp.Messages, message)
+	if len(bp.Messages) >= bp.BatchSize {
 		bp.flush()
 	}
 }
 
 func (bp *BatchProcessor) run() {
-	defer bp.waitGroup.Done()
-	ticker := time.NewTicker(bp.maxWait)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		bp.mu.Lock()
+	for range bp.BatchTicker.C {
 		bp.flush()
-		bp.mu.Unlock()
 	}
 }
 
 func (bp *BatchProcessor) flush() {
-	if len(bp.buffer) > 0 {
-		if err := bp.saveFunc(bp.buffer); err != nil {
-			// Handle error...
-			log.Printf("Failed to flush messages: %v", err)
-		}
-		bp.buffer = bp.buffer[:0] // Clear buffer
+	if len(bp.Messages) == 0 {
+		return
 	}
-}
 
-func (bp *BatchProcessor) Stop() {
-	bp.mu.Lock()
-	defer bp.mu.Unlock()
+	// Insert messages into PostgreSQL
+	if err := bp.InsertFunc(bp.Messages); err != nil {
+		log.Printf("Failed to insert messages: %v", err)
+		return
+	}
 
-	bp.flush()
-	bp.waitGroup.Wait()
+	// Clear messages
+	bp.Messages = bp.Messages[:0]
 }

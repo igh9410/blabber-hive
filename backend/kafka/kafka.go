@@ -84,7 +84,7 @@ func KafkaProducer() (*confluentKafka.Producer, error) {
 
 }
 
-func KafkaConsumer(batchProcessor BatchProcessor) (*confluentKafka.Consumer, error) {
+func KafkaConsumer(batchProcessor *BatchProcessor) (*confluentKafka.Consumer, error) {
 	consumer, err := confluentKafka.NewConsumer(&confluentKafka.ConfigMap{
 		"bootstrap.servers": os.Getenv("KAFKA_BROKER_URL"),
 		// "group.id":          "foo",

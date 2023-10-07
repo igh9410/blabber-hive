@@ -7,6 +7,7 @@ import (
 	"backend/kafka"
 	"backend/router"
 	"log"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -39,18 +40,7 @@ func main() {
 		log.Printf("Failed to initialize Kafka producer")
 	}
 	defer kafkaProducer.Close()
-	/*
-		// Kafka consumer configuration
-		consumer, err := kafka.KafkaConsumer(&kafka.ConfigMap{
-			"bootstrap.servers": "your_kafka_bootstrap_servers",
-			"group.id":          "your_group_id",
-			"auto.offset.reset": "earliest",
-		})
-		if err != nil {
-			panic(err)
-		}
-		defer consumer.Close()
-	*/
+
 	userRep := user.NewRepository(dbConn.GetDB())
 	userSvc := user.NewService(userRep)
 	userHandler := user.NewHandler(userSvc)
@@ -64,6 +54,17 @@ func main() {
 	go hub.Run()
 
 	chatWsHandler := chat.NewWsHandler(hub, chatSvc, kafkaProducer)
+
+	// Initialize BatchProcessor with a function to insert messages into Postgres and start KafkaConsumer
+	batchProcessor := kafka.NewBatchProcessor(func(messages []chat.Message) error {
+		// Code to insert messages into Postgres
+		// Ensure this function is safe to be called concurrently
+		return nil
+	}, 100, 5*time.Second)
+
+	if _, err := kafka.KafkaConsumer(batchProcessor); err != nil {
+		log.Printf("Failed to initialize Kafka consumer: %s", err)
+	}
 
 	routerConfig := &router.RouterConfig{
 		UserHandler:   userHandler,
