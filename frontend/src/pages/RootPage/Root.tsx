@@ -3,6 +3,9 @@ import { Auth } from '@supabase/auth-ui-react';
 import { Session, createClient } from '@supabase/supabase-js';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useState, useEffect } from 'react';
+import styles from './Root.module.scss';
+import { Header } from '@components/Header';
+import { ChatArea, InputArea } from '@features/chat';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_API_KEY);
 
@@ -25,6 +28,12 @@ export function Root() {
   if (!session) {
     return <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />;
   } else {
-    return <div>Logged in!</div>;
+    return (
+      <>
+        <Header />
+        <ChatArea />
+        <InputArea />
+      </>
+    );
   }
 }

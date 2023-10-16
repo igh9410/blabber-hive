@@ -1,0 +1,39 @@
+.inputArea {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem 1.25rem;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-top: 0.0625rem solid #ddd;
+}
+
+input[type='text'] {
+  flex: 1;
+  padding: 0.625rem;
+  margin-right: 0.625rem;
+  border: none;
+  border-radius: 1.25rem;
+  outline: none;
+}
+
+button {
+  padding: 0.625rem 1.25rem;
+  background-color: #0099ff;
+  color: white;
+  border: none;
+  border-radius: 1.25rem;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #0077cc;
+}
+
+/* Mobile Responsive */
+@media only screen and (max-width: 37.5rem) {
+  .inputArea {
+    padding: 0.625rem;
+  }
+}
