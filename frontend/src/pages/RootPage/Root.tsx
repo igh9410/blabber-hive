@@ -21,19 +21,18 @@ export function Root() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
-
+    localStorage.setItem('access_token', 'access_token');
     return () => subscription.unsubscribe();
   }, []);
 
   if (!session) {
     return <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />;
-  } else {
-    return (
-      <>
-        <Header />
-        <ChatArea />
-        <InputArea />
-      </>
-    );
   }
+  return (
+    <>
+      <Header />
+      <ChatArea />
+      <InputArea />
+    </>
+  );
 }
