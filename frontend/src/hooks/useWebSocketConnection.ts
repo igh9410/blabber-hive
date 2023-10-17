@@ -1,9 +1,13 @@
 import { WEBSOCKET_URL, authTokenKey } from '@config';
+import { Message, MessageType } from '@features/chat';
+import { useChatMessageStore } from '@stores';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 
 export const useWebSocketConnection = () => {
   const queryClient = useQueryClient();
+  const addMessage = useChatMessageStore((state) => state.addMessage);
+
   const [retryCount, setRetryCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
 
@@ -43,11 +47,18 @@ export const useWebSocketConnection = () => {
     };
 
     const handleWebSocketOnMessage = (event: MessageEvent) => {
-      console.log('Received a message from the server:', event.data);
+      // console.log('Received a message from the server:', event.data);
+      const receivedMessage: MessageType = JSON.parse(event.data);
+      //console.log('Received message = ', receivedMessage);
+      addMessage(receivedMessage);
     };
 
     const reconnetWebSocket = (error: Event) => {
       if (retryCount < 3 && !isConnected) {
+        console.log(
+          'WebSocket connection closed, trying reconnect..:',
+          error.type
+        );
         setRetryCount((prevRetryCount) => prevRetryCount + 1);
         setTimeout(() => {
           if (webSocket.current) {

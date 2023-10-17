@@ -15,10 +15,12 @@ export function Root() {
   const [messages, setMessages] = useState<MessageType[]>([]);
 
   const handleNewMessage = (text: string) => {
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { sender: 'sent', text: text },
-    ]);
+    const newMessage: MessageType = {
+      sender: 'sent',
+      content: text,
+      timestamp: new Date(),
+    };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
   };
 
   useEffect(() => {

@@ -58,37 +58,12 @@ func (c *Client) readPump() {
 
 		log.Printf("Read message = %v", string(message))
 
-		c.hub.broadcast <- message
-	}
-}
-
-func (c *Client) writePump() {
-	for {
-
-		messageContent := <-c.send
-		// Check message length in terms of characters
-		if utf8.RuneCountInString(string(messageContent)) > MaxMessageSize {
-			log.Printf("Message too long: %d characters", utf8.RuneCountInString(string(messageContent)))
-
-			// Send an error message to the client
-			c.send <- []byte(ErrorMessage)
-
-			continue
-		}
-
-		log.Printf("Write message = %v", string(messageContent))
-		err := c.conn.WriteMessage(websocket.TextMessage, messageContent)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
-
 		// Construct the message
 		msg := &Message{
-			ChatRoomID: c.chatroomID,           // Using the client's chatroomID
-			SenderID:   c.senderID,             // Using the client's senderID
-			Content:    string(messageContent), // Using the received message content
-			CreatedAt:  time.Now(),             // Using the current time for CreatedAt
+			ChatRoomID: c.chatroomID,    // Using the client's chatroomID
+			SenderID:   c.senderID,      // Using the client's senderID
+			Content:    string(message), // Using the received message content
+			CreatedAt:  time.Now(),      // Using the current time for CreatedAt
 			// Other fields can be set as per your requirements
 		}
 
@@ -116,5 +91,31 @@ func (c *Client) writePump() {
 		} else {
 			log.Printf("Produced message to Kafka: %v", kafkaMessage.Value)
 		}
+
+		c.hub.broadcast <- BroadcastMessage{Message: jsonMessage, Sender: c}
+	}
+}
+
+func (c *Client) writePump() {
+	for {
+
+		messageContent := <-c.send
+		// Check message length in terms of characters
+		if utf8.RuneCountInString(string(messageContent)) > MaxMessageSize {
+			log.Printf("Message too long: %d characters", utf8.RuneCountInString(string(messageContent)))
+
+			// Send an error message to the client
+			c.send <- []byte(ErrorMessage)
+
+			continue
+		}
+
+		log.Printf("Write message = %v", string(messageContent))
+		err := c.conn.WriteMessage(websocket.TextMessage, messageContent)
+		if err != nil {
+			log.Println("write:", err)
+			break
+		}
+
 	}
 }
