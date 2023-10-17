@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	batchSize     = 100             // Change as per your requirement
-	batchInterval = 5 * time.Second // Change as per your requirement
+	batchSize     = 300
+	batchInterval = 5 * time.Second
 )
 
 type BatchProcessor struct {

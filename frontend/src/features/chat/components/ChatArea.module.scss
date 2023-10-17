@@ -5,6 +5,7 @@
   background: rgba(255, 255, 255, 0.7);
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
 }
 
 .messageReceived,

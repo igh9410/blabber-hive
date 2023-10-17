@@ -31,7 +31,7 @@ export const useWebSocketConnection = () => {
     const webSocketURL =
       WEBSOCKET_URL +
       '/chats/' +
-      'c976b969-a8b1-4503-8026-0825467b0fee?' +
+      '840fa402-5026-43ee-ba5c-fcda852a7fbe?' +
       'token=' +
       accessToken;
 

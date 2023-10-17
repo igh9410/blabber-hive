@@ -3,6 +3,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -124,5 +125,6 @@ func isValidToken(token *jwt.Token, expectedIssuer string) bool {
 }
 
 func abortWithUnauthorized(c *gin.Context, message string) {
+	log.Printf("Unauthorized request: %s", message)
 	c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": message})
 }

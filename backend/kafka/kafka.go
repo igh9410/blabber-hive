@@ -2,12 +2,10 @@ package kafka
 
 import (
 	"backend/internal/chat"
-	"context"
 	"encoding/json"
 
 	"log"
 	"os"
-	"time"
 
 	confluentKafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
@@ -26,46 +24,53 @@ func NewKafkaClient() (*confluentKafka.AdminClient, error) {
 		log.Printf("Failed to create Admin client: %s\n", err)
 		return nil, err
 	}
+	/*
+		// Contexts are used to abort or limit the amount of time
+		// the Admin call blocks waiting for a result.
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
 
-	// Contexts are used to abort or limit the amount of time
-	// the Admin call blocks waiting for a result.
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+		// Define the topic configurations
+		topic := "messages"
 
-	// Define the topic configurations
-	topic := "messages"
+		numPartitions := 3
+		replicationFactor := 1
 
-	numPartitions := 3
-	replicationFactor := 1
+		// Create topics on cluster.
+		// Set Admin options to wait for the operation to finish (or at most 60s)
+		maxDur, err := time.ParseDuration("60s")
 
-	// Create topics on cluster.
-	// Set Admin options to wait for the operation to finish (or at most 60s)
-	maxDur, err := time.ParseDuration("60s")
+		if err != nil {
+			log.Printf("Failed to parse duration: %s\n", err)
+		}
 
-	if err != nil {
-		log.Printf("Failed to parse duration: %s\n", err)
-	}
+			// Check if the topic exists
+			topicResults, err := adminClient.
+			if err != nil {
+				log.Printf("Failed to list topics: %v\n", err)
+				return nil, err
+			}
 
-	results, err := adminClient.CreateTopics(
-		ctx,
-		// Multiple topics can be created simultaneously
-		// by providing more TopicSpecification structs here.
-		[]confluentKafka.TopicSpecification{{
-			Topic:             topic,
-			NumPartitions:     numPartitions,
-			ReplicationFactor: replicationFactor}},
-		// Admin options
-		confluentKafka.SetAdminOperationTimeout(maxDur))
+			results, err := adminClient.CreateTopics(
+				ctx,
+				// Multiple topics can be created simultaneously
+				// by providing more TopicSpecification structs here.
+				[]confluentKafka.TopicSpecification{{
+					Topic:             topic,
+					NumPartitions:     numPartitions,
+					ReplicationFactor: replicationFactor}},
+				// Admin options
+				confluentKafka.SetAdminOperationTimeout(maxDur))
 
-	if err != nil {
-		log.Printf("Failed to create topic: %v\n", err)
-		return nil, err
-	}
+			if err != nil {
+				log.Printf("Failed to create topic: %v\n", err)
+				return nil, err
+			}
 
-	// Print results
-	for _, result := range results {
-		log.Printf("%s\n", result)
-	}
+			// Print results
+			for _, result := range results {
+				log.Printf("%s\n", result)
+			} */
 
 	return adminClient, nil
 }
@@ -87,7 +92,7 @@ func KafkaProducer() (*confluentKafka.Producer, error) {
 func KafkaConsumer(batchProcessor *BatchProcessor) (*confluentKafka.Consumer, error) {
 	consumer, err := confluentKafka.NewConsumer(&confluentKafka.ConfigMap{
 		"bootstrap.servers": os.Getenv("KAFKA_BROKER_URL"),
-		// "group.id":          "foo",
+		"group.id":          "foo",
 		"auto.offset.reset": "earliest",
 	})
 

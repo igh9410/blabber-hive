@@ -31,7 +31,7 @@ export function Root() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
-    localStorage.setItem('access_token', 'access_token');
+
     return () => subscription.unsubscribe();
   }, []);
 
@@ -39,10 +39,10 @@ export function Root() {
     return <Auth supabaseClient={supabase} appearance={{ theme: ThemeSupa }} />;
   }
   return (
-    <>
+    <div className={styles.container}>
       <Header />
       <ChatArea messages={messages} />
       <InputArea onMessageSend={handleNewMessage} />
-    </>
+    </div>
   );
 }
