@@ -6,7 +6,6 @@ export const useWebSocketConnection = () => {
   const queryClient = useQueryClient();
   const [retryCount, setRetryCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
-  const [chatLog, setChatLog] = useState<string[]>([]);
 
   const webSocket = useRef<WebSocket | null>(null);
 
