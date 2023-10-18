@@ -10,17 +10,9 @@ services:
       - broker
       - zookeeper
     env_file:
-      - ./.env
+      - ./.env.docker
     environment:
-      SUPABASE_DOMAIN: ${SUPABASE_DOMAIN}
-      SUPABASE_AUTH: ${SUPABASE_AUTH}
-      JWT_SECRET: ${JWT_SECRET}
-      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY}
-      SUPABASE_POSTGRES_PASSWORD: ${SUPABASE_POSTGRES_PASSWORD}
-      IS_PRODUCTION: ${IS_PRODUCTION}
-      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      GIN_MODE: ${GIN_MODE}
+      - KAFKA_BROKER_URL=broker:9092
     networks:
       - blabber-hive
 
@@ -44,15 +36,19 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://broker:29092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_INTERNAL://broker:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    volumes:
+      - ./wait-for-it.sh:/wait-for-it.sh
+    #command:
+    #  ["/wait-for-it.sh", "zookeeper:2181", "--", "/etc/confluent/docker/run"]
     networks:
       - blabber-hive
 
-      # Postgres Image
-  postgres:
+  postgres: # Postgres Container
     image: postgres:latest
     container_name: blabber-hive-postgres
     ports:
@@ -63,7 +59,7 @@ services:
       POSTGRES_USERNAME: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
-  redis: # Redis Image
+  redis: # Redis Container
     image: redis:latest
     container_name: blabber-hive-redis
     ports:

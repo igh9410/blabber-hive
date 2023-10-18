@@ -19,7 +19,7 @@ func NewDatabase() (*Database, error) {
 	// Retrieve the values from environment variables
 	var username string
 	var password string
-
+	var host string
 	var connectionString string
 
 	if os.Getenv("IS_PRODUCTION") == "YES" { // Production Environment
@@ -27,7 +27,13 @@ func NewDatabase() (*Database, error) {
 	} else {
 		username = os.Getenv("POSTGRES_USERNAME")
 		password = os.Getenv("POSTGRES_PASSWORD")
-		connectionString = fmt.Sprintf("postgresql://%s:%s@localhost:5432/blabber_hive?sslmode=disable", username, password)
+		host = os.Getenv("POSTGRES_HOST") // Running in local Docker container
+
+		if host == "" { // Running in local environment
+			host = "localhost"
+		}
+
+		connectionString = fmt.Sprintf("postgresql://%s:%s@%s:5432/blabber_hive?sslmode=disable", username, password, host)
 	}
 
 	db, err := sql.Open("pgx", connectionString)

@@ -23,11 +23,7 @@ go.work
 
 # dotenv environment variable files
 .env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-.env.production
+.env.*
 
 # txt and html
 curl.txt
@@ -35,6 +31,9 @@ jwt.txt
 docker_commands.txt
 index.html
 index2.html
+
+# sh files
+dockerbuild.sh
 
 
 # Editor directories and files
