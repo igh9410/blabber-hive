@@ -1,0 +1,10 @@
+.git
+.gitignore
+.env
+.env.*
+./curl.txt
+./jwt.txt
+./main
+.docker_commands.txt
+./index.html
+./index2.html

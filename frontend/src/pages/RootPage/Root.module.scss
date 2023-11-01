@@ -1,0 +1,5 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* This ensures the container takes the full height of the viewport */
+}
