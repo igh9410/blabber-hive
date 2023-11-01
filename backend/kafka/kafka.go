@@ -23,11 +23,18 @@ func NewKafkaClient() (*confluentKafka.AdminClient, error) {
 	// Producer or Consumer instance, see NewAdminClientFromProducer and
 	// NewAdminClientFromConsumer.
 	// Create a new AdminClient instance
+	config := confluentKafka.ConfigMap{
+		"bootstrap.servers": fmt.Sprintf("%s,localhost:9092", bootstrapServers),
+	}
 
-	adminClient, err := confluentKafka.NewAdminClient(&confluentKafka.ConfigMap{
-		"bootstrap.servers": fmt.Sprintf("%s,localhost:9092", bootstrapServers), // Replace with the address of your Kafka broker
-	})
+	if os.Getenv("IS_PRODUCTION") == "YES" {
+		config["security.protocol"] = "SASL_SSL"
+		config["sasl.mechanisms"] = "SCRAM-SHA-256"
+		config["sasl.username"] = os.Getenv("KAFKA_USERNAME")
+		config["sasl.password"] = os.Getenv("KAFKA_PASSWORD")
+	}
 
+	adminClient, err := confluentKafka.NewAdminClient(&config)
 	if err != nil {
 		log.Printf("Failed to create Admin client: %s\n", err)
 		return nil, err
@@ -37,10 +44,19 @@ func NewKafkaClient() (*confluentKafka.AdminClient, error) {
 }
 
 func KafkaProducer() (*confluentKafka.Producer, error) {
-	producer, err := confluentKafka.NewProducer(&confluentKafka.ConfigMap{
-		"bootstrap.servers": fmt.Sprintf("%s,localhost:9092", bootstrapServers), // Replace with address of your Kafka broker
-	})
 
+	config := confluentKafka.ConfigMap{
+		"bootstrap.servers": fmt.Sprintf("%s,localhost:9092", bootstrapServers),
+	}
+
+	if os.Getenv("IS_PRODUCTION") == "YES" {
+		config["security.protocol"] = "SASL_SSL"
+		config["sasl.mechanisms"] = "SCRAM-SHA-256"
+		config["sasl.username"] = os.Getenv("KAFKA_USERNAME")
+		config["sasl.password"] = os.Getenv("KAFKA_PASSWORD")
+	}
+
+	producer, err := confluentKafka.NewProducer(&config)
 	if err != nil {
 		log.Printf("Failed to create Kafka producer: %s", err)
 		return nil, err
@@ -51,12 +67,20 @@ func KafkaProducer() (*confluentKafka.Producer, error) {
 }
 
 func KafkaConsumer(batchProcessor *BatchProcessor) (*confluentKafka.Consumer, error) {
-	consumer, err := confluentKafka.NewConsumer(&confluentKafka.ConfigMap{
-		"bootstrap.servers": fmt.Sprintf("%s,localhost:9092", bootstrapServers), // Replace with address of your Kafka broker
+	config := confluentKafka.ConfigMap{
+		"bootstrap.servers": fmt.Sprintf("%s,localhost:9092", bootstrapServers),
 		"group.id":          "foo",
 		"auto.offset.reset": "earliest",
-	})
+	}
 
+	if os.Getenv("IS_PRODUCTION") == "YES" {
+		config["security.protocol"] = "SASL_SSL"
+		config["sasl.mechanisms"] = "SCRAM-SHA-256"
+		config["sasl.username"] = os.Getenv("KAFKA_USERNAME")
+		config["sasl.password"] = os.Getenv("KAFKA_PASSWORD")
+	}
+
+	consumer, err := confluentKafka.NewConsumer(&config)
 	if err != nil {
 		log.Printf("Failed to create Kafka consumer: %s", err)
 		return nil, err
