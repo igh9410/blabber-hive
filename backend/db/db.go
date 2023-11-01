@@ -33,7 +33,7 @@ func NewDatabase() (*Database, error) {
 			host = "localhost"
 		}
 
-		connectionString = fmt.Sprintf("postgresql://%s:%s@%s:5432/blabber_hive?sslmode=disable", username, password, host)
+		connectionString = fmt.Sprintf("postgresql://%s:%s@%s:5432/postgres?sslmode=disable", username, password, host)
 	}
 
 	db, err := sql.Open("pgx", connectionString)
