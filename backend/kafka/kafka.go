@@ -3,7 +3,6 @@ package kafka
 import (
 	"backend/internal/chat"
 	"encoding/json"
-	"fmt"
 
 	"log"
 	"os"
@@ -15,23 +14,31 @@ const (
 	bootstrapServersVar = "KAFKA_BROKER_URL"
 )
 
-var bootstrapServers = os.Getenv(bootstrapServersVar)
-
 func NewKafkaClient() (*confluentKafka.AdminClient, error) {
 	// Create a new AdminClient.
 	// AdminClient can also be instantiated using an existing
 	// Producer or Consumer instance, see NewAdminClientFromProducer and
 	// NewAdminClientFromConsumer.
 	// Create a new AdminClient instance
-	config := confluentKafka.ConfigMap{
-		"bootstrap.servers": fmt.Sprintf("%s,localhost:9092", bootstrapServers),
-	}
+	bootstrapServers := os.Getenv(bootstrapServersVar)
+	var config confluentKafka.ConfigMap
+
+	log.Printf("Kafka bootstrap servers: %s", bootstrapServers)
 
 	if os.Getenv("IS_PRODUCTION") == "YES" {
+		config = confluentKafka.ConfigMap{
+			"bootstrap.servers": bootstrapServers,
+		}
 		config["security.protocol"] = "SASL_SSL"
 		config["sasl.mechanisms"] = "SCRAM-SHA-256"
 		config["sasl.username"] = os.Getenv("KAFKA_USERNAME")
 		config["sasl.password"] = os.Getenv("KAFKA_PASSWORD")
+		//	config["debug"] = "all"
+
+	} else {
+		config = confluentKafka.ConfigMap{
+			"bootstrap.servers": bootstrapServers,
+		}
 	}
 
 	adminClient, err := confluentKafka.NewAdminClient(&config)
@@ -44,16 +51,24 @@ func NewKafkaClient() (*confluentKafka.AdminClient, error) {
 }
 
 func KafkaProducer() (*confluentKafka.Producer, error) {
-
-	config := confluentKafka.ConfigMap{
-		"bootstrap.servers": fmt.Sprintf("%s,localhost:9092", bootstrapServers),
-	}
+	// Create a new Producer instance
+	bootstrapServers := os.Getenv(bootstrapServersVar)
+	var config confluentKafka.ConfigMap
 
 	if os.Getenv("IS_PRODUCTION") == "YES" {
+		config = confluentKafka.ConfigMap{
+			"bootstrap.servers": bootstrapServers,
+		}
 		config["security.protocol"] = "SASL_SSL"
 		config["sasl.mechanisms"] = "SCRAM-SHA-256"
 		config["sasl.username"] = os.Getenv("KAFKA_USERNAME")
 		config["sasl.password"] = os.Getenv("KAFKA_PASSWORD")
+		//	config["debug"] = "all"
+
+	} else {
+		config = confluentKafka.ConfigMap{
+			"bootstrap.servers": bootstrapServers,
+		}
 	}
 
 	producer, err := confluentKafka.NewProducer(&config)
@@ -67,17 +82,28 @@ func KafkaProducer() (*confluentKafka.Producer, error) {
 }
 
 func KafkaConsumer(batchProcessor *BatchProcessor) (*confluentKafka.Consumer, error) {
-	config := confluentKafka.ConfigMap{
-		"bootstrap.servers": fmt.Sprintf("%s,localhost:9092", bootstrapServers),
-		"group.id":          "foo",
-		"auto.offset.reset": "earliest",
-	}
+	// Create a new Consumer instance
+	bootstrapServers := os.Getenv(bootstrapServersVar)
+	var config confluentKafka.ConfigMap
 
 	if os.Getenv("IS_PRODUCTION") == "YES" {
+		config = confluentKafka.ConfigMap{
+			"bootstrap.servers": bootstrapServers,
+			"group.id":          "foo",
+			"auto.offset.reset": "earliest",
+		}
 		config["security.protocol"] = "SASL_SSL"
 		config["sasl.mechanisms"] = "SCRAM-SHA-256"
 		config["sasl.username"] = os.Getenv("KAFKA_USERNAME")
 		config["sasl.password"] = os.Getenv("KAFKA_PASSWORD")
+		//	config["debug"] = "all"
+
+	} else {
+		config = confluentKafka.ConfigMap{
+			"bootstrap.servers": bootstrapServers,
+			"group.id":          "foo",
+			"auto.offset.reset": "earliest",
+		}
 	}
 
 	consumer, err := confluentKafka.NewConsumer(&config)
