@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
+/*
 func EmailValidator(c *gin.Context) (string, error) {
 	// Extract the email parameter from the request context
 	email, exists := c.Get("email")
@@ -17,7 +19,7 @@ func EmailValidator(c *gin.Context) (string, error) {
 	}
 	log.Println("Email: ", email)
 	return email.(string), nil
-}
+}*/
 
 func ChatRoomIDValidator(c *gin.Context) (uuid.UUID, error) {
 	// Extract the id parameter from the request context
@@ -33,6 +35,7 @@ func ChatRoomIDValidator(c *gin.Context) (uuid.UUID, error) {
 	return chatRoomID, nil
 }
 
+/*
 func UserIDValidator(c *gin.Context) (uuid.UUID, error) {
 
 	userIDStr, exists := c.Get("user_id")
@@ -49,4 +52,28 @@ func UserIDValidator(c *gin.Context) (uuid.UUID, error) {
 	}
 	log.Println("User ID: ", userID)
 	return userID, nil
+} */
+
+func EmailValidator(email interface{}) (string, error) {
+	emailStr, ok := email.(string)
+	if !ok {
+		return "", fmt.Errorf("email is not a valid string")
+	}
+	if emailStr == "" {
+		return "", fmt.Errorf("email is empty")
+	}
+	// Further email format validation can be added here if necessary.
+	return emailStr, nil
+}
+
+func UserIDValidator(userID interface{}) (uuid.UUID, error) {
+	userIDStr, ok := userID.(string)
+	if !ok {
+		return uuid.Nil, fmt.Errorf("user_id is not a valid string")
+	}
+	parsedUUID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("user_id is not a valid UUID: %w", err)
+	}
+	return parsedUUID, nil
 }

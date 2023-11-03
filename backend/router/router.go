@@ -36,7 +36,7 @@ func InitRouter(cfg *RouterConfig) {
 
 	// CORS configuration
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:3000", "http://127.0.0.1:5500"}
+	config.AllowOrigins = []string{"http://localhost:3000", "http://127.0.0.1:5500", "https://cool-trifle-f85cfb.netlify.app"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE"}
 	config.AllowHeaders = []string{"Content-Type", "Authorization"}
 	config.AllowCredentials = true

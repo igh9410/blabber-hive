@@ -2,7 +2,6 @@ package user
 
 import (
 	"backend/internal/common"
-	"database/sql"
 	"log"
 	"net/http"
 
@@ -20,32 +19,38 @@ func NewHandler(s Service) *Handler {
 }
 
 func (h *Handler) HandleOAuth2Callback(c *gin.Context) {
-	userEmail, exists := c.Get("email")
+
+	userEmail, err := common.EmailValidator(c.MustGet("email"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	/*userEmail, exists := c.Get("email")
 
 	if !exists {
 		log.Println("Email does not exist")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email does not exist in the context"})
+		return
 
 	}
 	emailStr, ok := userEmail.(string)
 	if !ok {
 		log.Println("Failed to assert userEmail as string")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assert userEmail as string"})
 		return
-	}
+	} */
 
-	isRegistered, err := h.Service.IsUserRegistered(c.Request.Context(), emailStr)
+	isRegistered, err := h.Service.IsUserRegistered(c.Request.Context(), userEmail)
+
 	if err != nil {
-		if err == sql.ErrNoRows {
-			c.Redirect(302, "/api/users/register")
-			return
-		}
 		log.Println("Error checking user registration:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
 	if !isRegistered {
-		log.Printf("User with email %v is not registered, redirecting to /api/users/register endpoint...", emailStr)
-		c.Redirect(302, "/api/users/register")
+		log.Printf("User with email %v is not registered, needs to complete registration process...", userEmail)
+		c.JSON(http.StatusConflict, gin.H{"error": "User is not registered."})
 		return
 	}
 }
