@@ -74,7 +74,7 @@ func main() {
 		log.Fatalf("Invalid duration for BULK_INSERT_TIME: %v", err)
 	}
 
-	batchProcessor := kafka.NewBatchProcessor(insertFunc, bulkInsertSize, bulkInsertTime*time.Second)
+	batchProcessor := kafka.NewBatchProcessor(insertFunc, bulkInsertSize, bulkInsertTime)
 
 	defer batchProcessor.Stop()
 
