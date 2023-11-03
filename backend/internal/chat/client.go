@@ -74,7 +74,7 @@ func (c *Client) readPump() {
 
 			continue
 		}
-
+		log.Printf("JSON message = %v", string(jsonMessage))
 		// Send the message to the Kafka topic "messages"
 		topic := "messages"
 		kafkaMessage := &confluentKafka.Message{

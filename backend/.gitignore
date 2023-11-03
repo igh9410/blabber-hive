@@ -34,7 +34,7 @@ index2.html
 
 # sh files
 dockerbuild.sh
-
+*.sh
 
 # Editor directories and files
 .vscode/*

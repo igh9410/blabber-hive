@@ -7,6 +7,7 @@ import (
 	"backend/kafka"
 	"backend/router"
 	"log"
+
 	"time"
 
 	"github.com/joho/godotenv"
@@ -55,12 +56,11 @@ func main() {
 
 	chatWsHandler := chat.NewWsHandler(hub, chatSvc, kafkaProducer)
 
+	// Create an insert function with the database connection
+	insertFunc := kafka.NewInsertFunc(dbConn.GetDB())
+
 	// Initialize BatchProcessor with a function to insert messages into Postgres and start KafkaConsumer
-	batchProcessor := kafka.NewBatchProcessor(func(messages []chat.Message) error {
-		// Code to insert messages into Postgres
-		// Ensure this function is safe to be called concurrently
-		return nil
-	}, 100, 5*time.Second)
+	batchProcessor := kafka.NewBatchProcessor(insertFunc, 500, 2*time.Second)
 
 	if _, err := kafka.KafkaConsumer(batchProcessor); err != nil {
 		log.Printf("Failed to initialize Kafka consumer: %s", err)
