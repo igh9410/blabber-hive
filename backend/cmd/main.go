@@ -7,6 +7,8 @@ import (
 	"backend/kafka"
 	"backend/router"
 	"log"
+	"os"
+	"strconv"
 
 	"time"
 
@@ -60,7 +62,19 @@ func main() {
 	insertFunc := kafka.NewInsertFunc(dbConn.GetDB())
 
 	// Initialize BatchProcessor with a function to insert messages into Postgres and start KafkaConsumer
-	batchProcessor := kafka.NewBatchProcessor(insertFunc, 500, 30*time.Second)
+	bulkInsertSizeStr := os.Getenv("BULK_INSERT_SIZE")
+	bulkInsertSize, err := strconv.Atoi(bulkInsertSizeStr)
+	if err != nil {
+		log.Fatalf("Invalid integer for BULK_INSERT_SIZE: %v", err)
+	}
+
+	bulkInsertTimeStr := os.Getenv("BULK_INSERT_TIME")
+	bulkInsertTime, err := time.ParseDuration(bulkInsertTimeStr)
+	if err != nil {
+		log.Fatalf("Invalid duration for BULK_INSERT_TIME: %v", err)
+	}
+
+	batchProcessor := kafka.NewBatchProcessor(insertFunc, bulkInsertSize, bulkInsertTime)
 
 	defer batchProcessor.Stop()
 
