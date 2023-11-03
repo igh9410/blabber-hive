@@ -1,5 +1,5 @@
 import { WEBSOCKET_URL, authTokenKey } from '@config';
-import { Message, MessageType } from '@features/chat';
+import { MessageType } from '@features/chat';
 import { useChatMessageStore } from '@stores';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -47,9 +47,8 @@ export const useWebSocketConnection = () => {
     };
 
     const handleWebSocketOnMessage = (event: MessageEvent) => {
-      // console.log('Received a message from the server:', event.data);
       const receivedMessage: MessageType = JSON.parse(event.data);
-      //console.log('Received message = ', receivedMessage);
+
       addMessage(receivedMessage);
     };
 

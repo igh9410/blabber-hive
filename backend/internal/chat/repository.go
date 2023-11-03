@@ -17,6 +17,8 @@ type Repository interface {
 	FetchRecentMessages(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
 	SaveMessage(ctx context.Context, message *Message) error
+	//FetchMessagesFromRedis(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error)
+	FetchMessagesFromDatabase(ctx context.Context, chatRoomID uuid.UUID, page int, limit int) ([]Message, error)
 }
 
 type DBTX interface {
@@ -168,4 +170,68 @@ func (r *repository) SaveMessage(ctx context.Context, message *Message) error {
 	}
 
 	return nil
+}
+
+/*
+func (r *repository) FetchMessagesFromRedis(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error) {
+	redisKey := "chatroom:" + chatRoomID.String() + ":messages"
+	messagesJSON, err := r.redisClient.LRange(ctx, redisKey, -limit, -1).Result()
+	if err != nil {
+		if err == redis.Nil {
+			// Redis key does not exist
+			return nil, nil
+		}
+		// Some other error occurred
+		return nil, err
+	}
+
+	var messages []Message
+	for _, mJSON := range messagesJSON {
+		var msg Message
+		err := json.Unmarshal([]byte(mJSON), &msg)
+		if err != nil {
+			log.Printf("Failed to unmarshal message: %v", err)
+			// Decide how you want to handle partial failure
+			continue
+		}
+		messages = append(messages, msg)
+	}
+
+	return messages, nil
+} */
+
+// FetchMessagesFromDatabase retrieves chat messages from PostgreSQL
+func (r *repository) FetchMessagesFromDatabase(ctx context.Context, chatRoomID uuid.UUID, page int, limit int) ([]Message, error) {
+	offset := page * limit
+	query := `
+		SELECT id, chat_room_id, sender_id, content, created_at
+		FROM messages
+		WHERE chat_room_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
+	`
+	rows, err := r.db.QueryContext(ctx, query, chatRoomID, limit, offset)
+	if err != nil {
+		log.Printf("Failed to fetch messages from database: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var messages []Message
+	for rows.Next() {
+		var msg Message
+		if err := rows.Scan(&msg.ID, &msg.ChatRoomID, &msg.SenderID, &msg.Content, &msg.CreatedAt); err != nil {
+			log.Printf("Failed to scan message: %v", err)
+			// Decide how you want to handle partial failure
+			continue
+		}
+		messages = append(messages, msg)
+	}
+
+	// Check for any error that occurred during iteration
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return messages, nil
 }

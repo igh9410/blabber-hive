@@ -60,7 +60,9 @@ func main() {
 	insertFunc := kafka.NewInsertFunc(dbConn.GetDB())
 
 	// Initialize BatchProcessor with a function to insert messages into Postgres and start KafkaConsumer
-	batchProcessor := kafka.NewBatchProcessor(insertFunc, 500, 2*time.Second)
+	batchProcessor := kafka.NewBatchProcessor(insertFunc, 500, 30*time.Second)
+
+	defer batchProcessor.Stop()
 
 	if _, err := kafka.KafkaConsumer(batchProcessor); err != nil {
 		log.Printf("Failed to initialize Kafka consumer: %s", err)
