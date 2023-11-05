@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -69,4 +70,40 @@ func (h *Handler) JoinChatRoom(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, res)
 
+}
+
+func (h *Handler) GetChatMessages(c *gin.Context) {
+	// Extract ChatRoomID from the context
+	chatRoomID, err := common.ChatRoomIDValidator(c)
+	if err != nil {
+		log.Printf("Error occurred with chat room ID: %v", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid chat room ID"})
+		return
+	}
+
+	// Extract page and pageSize from query parameters with defaults
+	page := c.DefaultQuery("page", "1")
+	pageSize := c.DefaultQuery("pageSize", "20")
+
+	// Convert page and pageSize to int
+	pageNum, err := strconv.Atoi(page)
+	if err != nil || pageNum < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
+		return
+	}
+	pageSizeInt, err := strconv.Atoi(pageSize)
+	if err != nil || pageSizeInt <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page size"})
+		return
+	}
+
+	// Call the service function to get paginated messages
+	messages, err := h.Service.GetPaginatedMessages(c.Request.Context(), chatRoomID, pageNum, pageSizeInt)
+	if err != nil {
+		log.Printf("Error fetching messages: %v", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching messages"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"messages": messages})
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -17,8 +18,7 @@ type Repository interface {
 	FetchRecentMessages(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
 	SaveMessage(ctx context.Context, message *Message) error
-	//FetchMessagesFromRedis(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error)
-	FetchMessagesFromDatabase(ctx context.Context, chatRoomID uuid.UUID, page int, limit int) ([]Message, error)
+	GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, pageNum int, pageSize int) ([]Message, error)
 }
 
 type DBTX interface {
@@ -172,6 +172,68 @@ func (r *repository) SaveMessage(ctx context.Context, message *Message) error {
 	return nil
 }
 
+// GetPaginatedMessages retrieves messages from the database with pagination.
+func (r *repository) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, pageNum int, pageSize int) ([]Message, error) {
+	offset := (pageNum - 1) * pageSize // calculate the offset
+	if offset < 0 {
+		offset = 0 // ensure offset is not negative
+	}
+
+	query := `
+		SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id
+		FROM messages
+		WHERE chat_room_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3
+	`
+	rows, err := r.db.QueryContext(ctx, query, chatRoomID, pageSize, offset)
+	if err != nil {
+		return nil, fmt.Errorf("querying for paginated messages: %w", err)
+	}
+	defer rows.Close()
+
+	var messages []Message
+	for rows.Next() {
+		var msg Message
+		var readAt sql.NullTime
+		var deletedByUserID sql.NullString // Use sql.NullString for UUID fields that can be NULL
+
+		if err := rows.Scan(
+			&msg.ID,
+			&msg.ChatRoomID,
+			&msg.SenderID,
+			&msg.Content,
+			&msg.MediaURL,
+			&msg.CreatedAt,
+			&readAt,
+			&deletedByUserID,
+		); err != nil {
+			return nil, fmt.Errorf("scanning message: %w", err)
+		}
+
+		// Check if readAt is valid, if so, assign it to the struct
+		if readAt.Valid {
+			msg.ReadAt = &readAt.Time
+		}
+
+		// Check if deletedByUserID is valid, if so, convert to uuid.UUID and assign it to the struct
+		if deletedByUserID.Valid {
+			uid, err := uuid.Parse(deletedByUserID.String)
+			if err != nil {
+				return nil, fmt.Errorf("parsing UUID: %w", err)
+			}
+			msg.DeletedByUserID = &uid
+		}
+
+		messages = append(messages, msg)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating rows: %w", err)
+	}
+
+	return messages, nil
+}
+
 /*
 func (r *repository) FetchMessagesFromRedis(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error) {
 	redisKey := "chatroom:" + chatRoomID.String() + ":messages"
@@ -199,39 +261,3 @@ func (r *repository) FetchMessagesFromRedis(ctx context.Context, chatRoomID uuid
 
 	return messages, nil
 } */
-
-// FetchMessagesFromDatabase retrieves chat messages from PostgreSQL
-func (r *repository) FetchMessagesFromDatabase(ctx context.Context, chatRoomID uuid.UUID, page int, limit int) ([]Message, error) {
-	offset := page * limit
-	query := `
-		SELECT id, chat_room_id, sender_id, content, created_at
-		FROM messages
-		WHERE chat_room_id = $1
-		ORDER BY created_at DESC
-		LIMIT $2 OFFSET $3
-	`
-	rows, err := r.db.QueryContext(ctx, query, chatRoomID, limit, offset)
-	if err != nil {
-		log.Printf("Failed to fetch messages from database: %v", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	var messages []Message
-	for rows.Next() {
-		var msg Message
-		if err := rows.Scan(&msg.ID, &msg.ChatRoomID, &msg.SenderID, &msg.Content, &msg.CreatedAt); err != nil {
-			log.Printf("Failed to scan message: %v", err)
-			// Decide how you want to handle partial failure
-			continue
-		}
-		messages = append(messages, msg)
-	}
-
-	// Check for any error that occurred during iteration
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return messages, nil
-}
