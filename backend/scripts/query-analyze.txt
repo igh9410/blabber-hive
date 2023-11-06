@@ -1,0 +1,12 @@
+EXPLAIN ANALYZE SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id
+		FROM messages
+		WHERE chat_room_id = '21e546be-629d-4e84-9236-b05c69becb18'
+		ORDER BY created_at DESC
+		LIMIT 50 OFFSET 0;
+
+EXPLAIN ANALYZE SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id
+        FROM messages
+        WHERE chat_room_id = '21e546be-629d-4e84-9236-b05c69becb18' 
+        AND id < 12000
+        ORDER BY id DESC
+        LIMIT 50;

@@ -1,5 +1,16 @@
-.container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh; /* This ensures the container takes the full height of the viewport */
+.authContainer {
+  max-width: 25rem; /* max-width in rem */
+  margin: 1rem auto; /* vertical and horizontal margin in rem */
+  padding: 1rem; /* padding in rem */
+  box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1); /* shadow offset and blur in rem */
+  border-radius: 0.5rem; /* border-radius in rem */
+  background: white; /* background color */
+}
+
+/* Responsive styles */
+@media (max-width: 48rem) {
+  /* media query in rem */
+  .authContainer {
+    margin: 1rem; /* margin in rem */
+  }
 }

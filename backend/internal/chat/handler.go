@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -81,29 +82,41 @@ func (h *Handler) GetChatMessages(c *gin.Context) {
 		return
 	}
 
-	// Extract page and pageSize from query parameters with defaults
-	page := c.DefaultQuery("page", "1")
-	pageSize := c.DefaultQuery("pageSize", "20")
+	// Extract the cursor and pageSize from query parameters
+	cursorStr := c.DefaultQuery("cursor", "") // Cursor is provided by the client
+	pageSize := c.DefaultQuery("pageSize", "50")
 
-	// Convert page and pageSize to int
-	pageNum, err := strconv.Atoi(page)
-	if err != nil || pageNum < 1 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page number"})
-		return
-	}
+	// Parse pageSize to an integer
 	pageSizeInt, err := strconv.Atoi(pageSize)
 	if err != nil || pageSizeInt <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid page size"})
 		return
 	}
 
+	// Parse the cursor string to a time.Time
+	var cursorTime *time.Time
+	if cursorStr != "" {
+		parsedCursor, err := time.Parse(time.RFC3339, cursorStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid cursor"})
+			return
+		}
+		cursorTime = &parsedCursor
+	}
+
 	// Call the service function to get paginated messages
-	messages, err := h.Service.GetPaginatedMessages(c.Request.Context(), chatRoomID, pageNum, pageSizeInt)
+	messages, err := h.Service.GetPaginatedMessages(c.Request.Context(), chatRoomID, cursorTime, pageSizeInt)
 	if err != nil {
 		log.Printf("Error fetching messages: %v", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching messages"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"messages": messages})
+	// Determine the next cursor
+	var nextCursor string
+	if len(messages) > 0 {
+		nextCursor = messages[len(messages)-1].CreatedAt.Format(time.RFC3339)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"messages": messages, "nextCursor": nextCursor})
 }

@@ -18,7 +18,7 @@ type Repository interface {
 	FetchRecentMessages(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
 	SaveMessage(ctx context.Context, message *Message) error
-	GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, pageNum int, pageSize int) ([]Message, error)
+	GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursor *time.Time, pageSize int) ([]Message, error)
 }
 
 type DBTX interface {
@@ -173,20 +173,28 @@ func (r *repository) SaveMessage(ctx context.Context, message *Message) error {
 }
 
 // GetPaginatedMessages retrieves messages from the database with pagination.
-func (r *repository) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, pageNum int, pageSize int) ([]Message, error) {
-	offset := (pageNum - 1) * pageSize // calculate the offset
-	if offset < 0 {
-		offset = 0 // ensure offset is not negative
-	}
+func (r *repository) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursor *time.Time, pageSize int) ([]Message, error) {
+	/*
+		offset := (pageNum - 1) * pageSize // calculate the offset
+		if offset < 0 {
+			offset = 0 // ensure offset is not negative
+		}
 
+		query := `
+			SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id
+			FROM messages
+			WHERE chat_room_id = $1
+			ORDER BY created_at DESC
+			LIMIT $2 OFFSET $3
+		` */
 	query := `
 		SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id
 		FROM messages
-		WHERE chat_room_id = $1
+		WHERE chat_room_id = $1 AND created_at < $2
 		ORDER BY created_at DESC
-		LIMIT $2 OFFSET $3
+		LIMIT $3
 	`
-	rows, err := r.db.QueryContext(ctx, query, chatRoomID, pageSize, offset)
+	rows, err := r.db.QueryContext(ctx, query, chatRoomID, cursor, pageSize)
 	if err != nil {
 		return nil, fmt.Errorf("querying for paginated messages: %w", err)
 	}
@@ -233,31 +241,3 @@ func (r *repository) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.U
 
 	return messages, nil
 }
-
-/*
-func (r *repository) FetchMessagesFromRedis(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error) {
-	redisKey := "chatroom:" + chatRoomID.String() + ":messages"
-	messagesJSON, err := r.redisClient.LRange(ctx, redisKey, -limit, -1).Result()
-	if err != nil {
-		if err == redis.Nil {
-			// Redis key does not exist
-			return nil, nil
-		}
-		// Some other error occurred
-		return nil, err
-	}
-
-	var messages []Message
-	for _, mJSON := range messagesJSON {
-		var msg Message
-		err := json.Unmarshal([]byte(mJSON), &msg)
-		if err != nil {
-			log.Printf("Failed to unmarshal message: %v", err)
-			// Decide how you want to handle partial failure
-			continue
-		}
-		messages = append(messages, msg)
-	}
-
-	return messages, nil
-} */

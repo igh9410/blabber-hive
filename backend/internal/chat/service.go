@@ -17,7 +17,7 @@ type Service interface {
 	GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
 	RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error)
-	GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, pageNum int, pageSize int) ([]Message, error)
+	GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursorTime *time.Time, pageSize int) ([]Message, error)
 }
 
 type service struct {
@@ -100,9 +100,9 @@ func (s *service) RegisterClient(ctx context.Context, hub *Hub, conn *websocket.
 	return client, nil
 }
 
-func (s *service) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, pageNum int, pageSize int) ([]Message, error) {
+func (s *service) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursorTime *time.Time, pageSize int) ([]Message, error) {
 
-	res, err := s.Repository.GetPaginatedMessages(ctx, chatRoomID, pageNum, pageSize)
+	res, err := s.Repository.GetPaginatedMessages(ctx, chatRoomID, cursorTime, pageSize)
 	if err != nil {
 		log.Printf("Error occured with getting paginated messages for chat room ID %v: %v", chatRoomID, err)
 		return nil, err
