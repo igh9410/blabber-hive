@@ -1,5 +1,5 @@
 import { ChatArea, InputArea, MessageType } from '@features/chat';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export function Lobby() {
   const [messages, setMessages] = useState<MessageType[]>([]);
@@ -7,8 +7,9 @@ export function Lobby() {
   const handleNewMessage = (text: string) => {
     const newMessage: MessageType = {
       sender: 'sent',
+      senderID: '1', // TODO: replace with actual user ID
       content: text,
-      timestamp: new Date(),
+      createdAt: new Date(),
     };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
   };

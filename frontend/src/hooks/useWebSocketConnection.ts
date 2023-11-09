@@ -1,5 +1,5 @@
 import { WEBSOCKET_URL, authTokenKey } from '@config';
-import { MessageType } from '@features/chat';
+import { MessageType, ServerMessageType } from '@features/chat';
 import { useChatMessageStore } from '@stores';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -16,7 +16,8 @@ export const useWebSocketConnection = () => {
   const sendMessage = (message: string) => {
     if (webSocket.current) {
       console.log('Sending message:', message);
-      webSocket.current.send(message);
+
+      webSocket.current.send(message); // serialize the object to a JSON string
     }
   };
 
@@ -47,7 +48,20 @@ export const useWebSocketConnection = () => {
     };
 
     const handleWebSocketOnMessage = (event: MessageEvent) => {
-      const receivedMessage: MessageType = JSON.parse(event.data);
+      const serverMessage: ServerMessageType = JSON.parse(event.data);
+
+      // Convert the snake_case properties from the server message to camelCase for the MessageType
+      const receivedMessage: MessageType = {
+        sender: 'received',
+        senderID: serverMessage.sender_id,
+        content: serverMessage.content,
+        createdAt: new Date(serverMessage.created_at),
+        img: serverMessage.media_url || undefined,
+      };
+
+      console.log('Receiving messages..', receivedMessage);
+
+      // receivedMessage.sender = 'received';
 
       addMessage(receivedMessage);
     };
