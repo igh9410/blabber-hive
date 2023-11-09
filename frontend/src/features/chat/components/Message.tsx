@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './Message.module.scss';
 
 type MessageProps = {
-  sender: 'received' | 'sent';
+  sender: string;
   text: string;
   img?: string;
 };
@@ -14,9 +14,6 @@ export const Message = ({ sender, text, img }: MessageProps) => {
         sender === 'received' ? styles.messageReceived : styles.messageSent
       }
     >
-      {sender === 'received' && (
-        <img src={img} alt="Sender's Profile" className="profileImage" />
-      )}
       <p>{text}</p>
     </div>
   );

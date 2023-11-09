@@ -6,7 +6,7 @@ type InputAreaProps = {
   onMessageSend: (text: string) => void;
 };
 
-export function InputArea({ onMessageSend }: InputAreaProps) {
+export function InputArea({ onMessageSend }: Readonly<InputAreaProps>) {
   const [message, setMessage] = useState(''); // State to hold the input value
   const { sendMessage } = useWebSocketConnection();
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

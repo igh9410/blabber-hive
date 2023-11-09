@@ -17,6 +17,7 @@ type Service interface {
 	GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
 	RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error)
+	GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursorTime *time.Time, pageSize int) ([]Message, error)
 }
 
 type service struct {
@@ -88,18 +89,6 @@ func (s *service) GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID)
 	return chatRoomInfo, nil
 }
 
-/*
-func (s *service) GetChatMessages(ctx context.Context, chatRoomID uuid.UUID, page int) ([]Message, error) {
-	// Attempt to fetch from Redis
-	messages, err := s.Repository.FetchMessagesFromRedis(ctx, chatRoomID, page)
-	if err == nil && len(messages) > 0 {
-		return messages, nil
-	}
-
-	// Fallback to another method if Redis is empty or there's an error
-	return s.Repository.FetchMessagesFromDatabase(ctx, chatRoomID, page, 0)
-} */
-
 func (s *service) RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error) {
 
 	senderID := userID
@@ -109,4 +98,14 @@ func (s *service) RegisterClient(ctx context.Context, hub *Hub, conn *websocket.
 
 	client.hub.register <- client
 	return client, nil
+}
+
+func (s *service) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursorTime *time.Time, pageSize int) ([]Message, error) {
+
+	res, err := s.Repository.GetPaginatedMessages(ctx, chatRoomID, cursorTime, pageSize)
+	if err != nil {
+		log.Printf("Error occured with getting paginated messages for chat room ID %v: %v", chatRoomID, err)
+		return nil, err
+	}
+	return res, nil
 }

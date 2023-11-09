@@ -12,14 +12,14 @@ type ChatRoom struct {
 }
 
 type Message struct {
-	ID              int       `json:"id"`
-	ChatRoomID      uuid.UUID `json:"chat_room_id"`
-	SenderID        uuid.UUID `json:"sender_id"`
-	Content         string    `json:"content"`
-	MediaURL        string    `json:"media_url"`
-	CreatedAt       time.Time `json:"created_at"`
-	ReadAt          time.Time `json:"read_at"`
-	DeletedByUserID uuid.UUID `json:"deleted_by_user_id"`
+	ID              int        `json:"id"`
+	ChatRoomID      uuid.UUID  `json:"chat_room_id"`
+	SenderID        uuid.UUID  `json:"sender_id"`
+	Content         string     `json:"content"`
+	MediaURL        string     `json:"media_url"`
+	CreatedAt       time.Time  `json:"created_at"`
+	ReadAt          *time.Time `json:"read_at,omitempty"`
+	DeletedByUserID *uuid.UUID `json:"deleted_by_user_id,omitempty"`
 }
 
 type UserInChatRoom struct {
