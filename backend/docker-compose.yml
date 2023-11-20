@@ -1,3 +1,4 @@
+version: "3"
 services:
   blabber-hive:
     image: igh9410/blabber-hive:v1
@@ -49,7 +50,7 @@ services:
       - blabber-hive
 
   postgres: # Postgres Container
-    image: postgres:latest
+    image: postgres:15.5-alpine
     container_name: blabber-hive-postgres
     ports:
       - "5432:5432"

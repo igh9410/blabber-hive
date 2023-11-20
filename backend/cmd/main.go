@@ -65,13 +65,13 @@ func main() {
 	bulkInsertSizeStr := os.Getenv("BULK_INSERT_SIZE")
 	bulkInsertSize, err := strconv.Atoi(bulkInsertSizeStr)
 	if err != nil {
-		log.Fatalf("Invalid integer for BULK_INSERT_SIZE: %v", err)
+		log.Printf("Invalid integer for BULK_INSERT_SIZE: %v", err)
 	}
 
 	bulkInsertTimeStr := os.Getenv("BULK_INSERT_TIME")
 	bulkInsertTime, err := time.ParseDuration(bulkInsertTimeStr)
 	if err != nil {
-		log.Fatalf("Invalid duration for BULK_INSERT_TIME: %v", err)
+		log.Printf("Invalid duration for BULK_INSERT_TIME: %v", err)
 	}
 
 	batchProcessor := kafka.NewBatchProcessor(insertFunc, bulkInsertSize, bulkInsertTime)

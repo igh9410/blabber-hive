@@ -32,11 +32,18 @@ docker_commands.txt
 index.html
 index2.html
 
+# Virtual Environment
+myenv/
+
 # sh files
 dockerbuild.sh
 *.sh
 
-./myenv
+# Python test scripts
+scripts/
+
+# Kubernetes files
+k8s/
 
 # Editor directories and files
 .vscode/*
