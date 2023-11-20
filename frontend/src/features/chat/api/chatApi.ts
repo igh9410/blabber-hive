@@ -6,17 +6,10 @@ import { authTokenKey } from '@config';
 // Function to fetch chat messages with proper types
 export async function fetchChatMessagesFn(
   chatRoomId: string,
-  pageParam?: string // Make pageParam optional as it may not be provided for the initial request
+  cursor = '' // Make pageParam optional as it may not be provided for the initial request
 ): Promise<ChatMessagesResponse> {
-  // Parse the string into a Date object
-  const dateTimeString = '2023-11-09 21:06:13.567';
-  const date = new Date(dateTimeString);
-
-  // Format the Date object as an ISO 8601 string (commonly used in APIs)
-  const isoDateString = date.toISOString();
-  const chatMessagesURL = `/api/chats/${chatRoomId}/messages?cursor=${isoDateString}`;
-
-  console.log(isoDateString); // Outputs: 2023-11-09T21:06:13.567Z (note the 'Z' indicating UTC)
+  // Create the URL to fetch the chat messages from
+  const chatMessagesURL = `/api/chats/${chatRoomId}/messages?cursor=${cursor}`;
 
   const supabaseData = localStorage.getItem(authTokenKey);
 
@@ -29,7 +22,8 @@ export async function fetchChatMessagesFn(
     console.error('No Supabase data found in Local Storage');
   }
   try {
-    console.log('Token = ', accessToken);
+    // Make the request to fetch the chat messages
+    console.log('Fetching messages for cursor:', cursor);
     const { data } = await axiosInstance.get<ChatMessagesResponse>(
       chatMessagesURL,
       {

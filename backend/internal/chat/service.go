@@ -102,10 +102,22 @@ func (s *service) RegisterClient(ctx context.Context, hub *Hub, conn *websocket.
 
 func (s *service) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursorTime *time.Time, pageSize int) ([]Message, error) {
 
+	if cursorTime == nil { // Fetch first 50 messages if cursor is nil (the user is on the first page)
+		res, err := s.Repository.GetFirstPageMessages(ctx, chatRoomID, pageSize)
+
+		if err != nil {
+			log.Printf("Error occured with getting first page messages for chat room ID %v: %v", chatRoomID, err)
+			return nil, err
+		}
+		log.Printf("Fetching First page messages for chat room ID %v", chatRoomID)
+		return res, nil
+	}
+
 	res, err := s.Repository.GetPaginatedMessages(ctx, chatRoomID, cursorTime, pageSize)
 	if err != nil {
 		log.Printf("Error occured with getting paginated messages for chat room ID %v: %v", chatRoomID, err)
 		return nil, err
 	}
+	log.Printf("Fetching paginated messages for chat room ID %v", chatRoomID)
 	return res, nil
 }

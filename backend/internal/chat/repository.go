@@ -15,10 +15,10 @@ type Repository interface {
 	CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*ChatRoom, error)
 	FindChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
 	FindChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error)
-	FetchRecentMessages(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
 	SaveMessage(ctx context.Context, message *Message) error
 	GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursor *time.Time, pageSize int) ([]Message, error)
+	GetFirstPageMessages(ctx context.Context, chatRoomID uuid.UUID, pageSize int) ([]Message, error)
 }
 
 type DBTX interface {
@@ -129,34 +129,6 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
 
 }
 
-func (r *repository) FetchRecentMessages(ctx context.Context, chatRoomID uuid.UUID, limit int) ([]Message, error) {
-	query := `
-        SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id
-        FROM messages
-        WHERE chat_room_id = $1
-        ORDER BY created_at DESC
-        LIMIT $2
-    `
-
-	rows, err := r.db.QueryContext(ctx, query, chatRoomID, limit)
-	if err != nil {
-		log.Printf("Failed to fetch recent messages for this chat room, err: %v", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	var messages []Message
-	for rows.Next() {
-		var msg Message
-		if err := rows.Scan(&msg.ID, &msg.ChatRoomID, &msg.SenderID, &msg.Content, &msg.MediaURL, &msg.CreatedAt, &msg.ReadAt, &msg.DeletedByUserID); err != nil {
-			return nil, err
-		}
-		messages = append(messages, msg)
-	}
-
-	return messages, nil
-}
-
 func (r *repository) SaveMessage(ctx context.Context, message *Message) error {
 	query := `
         INSERT INTO messages (id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id)
@@ -174,19 +146,6 @@ func (r *repository) SaveMessage(ctx context.Context, message *Message) error {
 
 // GetPaginatedMessages retrieves messages from the database with pagination.
 func (r *repository) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursor *time.Time, pageSize int) ([]Message, error) {
-	/*
-		offset := (pageNum - 1) * pageSize // calculate the offset
-		if offset < 0 {
-			offset = 0 // ensure offset is not negative
-		}
-
-		query := `
-			SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id
-			FROM messages
-			WHERE chat_room_id = $1
-			ORDER BY created_at DESC
-			LIMIT $2 OFFSET $3
-		` */
 	query := `
 		SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id
 		FROM messages
@@ -195,6 +154,63 @@ func (r *repository) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.U
 		LIMIT $3
 	`
 	rows, err := r.db.QueryContext(ctx, query, chatRoomID, cursor, pageSize)
+	if err != nil {
+		return nil, fmt.Errorf("querying for paginated messages: %w", err)
+	}
+	defer rows.Close()
+
+	var messages []Message
+	for rows.Next() {
+		var msg Message
+		var readAt sql.NullTime
+		var deletedByUserID sql.NullString // Use sql.NullString for UUID fields that can be NULL
+
+		if err := rows.Scan(
+			&msg.ID,
+			&msg.ChatRoomID,
+			&msg.SenderID,
+			&msg.Content,
+			&msg.MediaURL,
+			&msg.CreatedAt,
+			&readAt,
+			&deletedByUserID,
+		); err != nil {
+			return nil, fmt.Errorf("scanning message: %w", err)
+		}
+
+		// Check if readAt is valid, if so, assign it to the struct
+		if readAt.Valid {
+			msg.ReadAt = &readAt.Time
+		}
+
+		// Check if deletedByUserID is valid, if so, convert to uuid.UUID and assign it to the struct
+		if deletedByUserID.Valid {
+			uid, err := uuid.Parse(deletedByUserID.String)
+			if err != nil {
+				return nil, fmt.Errorf("parsing UUID: %w", err)
+			}
+			msg.DeletedByUserID = &uid
+		}
+
+		messages = append(messages, msg)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating rows: %w", err)
+	}
+
+	return messages, nil
+}
+
+func (r *repository) GetFirstPageMessages(ctx context.Context, chatRoomID uuid.UUID, pageSize int) ([]Message, error) {
+	query := `
+		SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id
+		FROM messages
+		WHERE chat_room_id = $1
+		ORDER BY created_at DESC
+		LIMIT $2
+	`
+
+	rows, err := r.db.QueryContext(ctx, query, chatRoomID, pageSize)
 	if err != nil {
 		return nil, fmt.Errorf("querying for paginated messages: %w", err)
 	}

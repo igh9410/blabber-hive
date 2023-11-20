@@ -1,12 +1,14 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
 import { ChatMessagesResponse, fetchChatMessagesFn } from '@features/chat';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
-export const useChatMessages = (chatRoomId: string) => {
+export function useChatMessages(chatRoomId: string) {
   return useInfiniteQuery<ChatMessagesResponse, Error>(
-    ['chatMessages', chatRoomId], // Query key includes chatRoomId to ensure uniqueness per chat room
-    ({ pageParam }) => fetchChatMessagesFn(chatRoomId, pageParam), // Fetch function
+    ['chatMessages', chatRoomId],
+    ({ pageParam = '' }) => fetchChatMessagesFn(chatRoomId, pageParam),
     {
-      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined, // Determine the cursor for the next page
+      getNextPageParam: (lastPage, pages) => {
+        lastPage.nextCursor ?? '';
+      },
     }
   );
-};
+}
