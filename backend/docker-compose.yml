@@ -14,6 +14,7 @@ services:
       - ./.env.docker
     environment:
       - KAFKA_BROKER_URL=broker:9092
+      - TZ=Asia/Seoul
     networks:
       - blabber-hive
 
