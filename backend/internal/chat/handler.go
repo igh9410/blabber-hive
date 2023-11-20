@@ -115,7 +115,8 @@ func (h *Handler) GetChatMessages(c *gin.Context) {
 	// Determine the next cursor
 	var nextCursor string
 	if len(messages) > 0 {
-		nextCursor = messages[len(messages)-1].CreatedAt.Format(time.RFC3339)
+
+		nextCursor = messages[len(messages)-1].CreatedAt.Format("2006-01-02T15:04:05.999999Z07:00")
 	}
 
 	c.JSON(http.StatusOK, gin.H{"messages": messages, "nextCursor": nextCursor})

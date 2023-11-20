@@ -144,15 +144,14 @@ func (r *repository) SaveMessage(ctx context.Context, message *Message) error {
 	return nil
 }
 
-// GetPaginatedMessages retrieves messages from the database with pagination.
 func (r *repository) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursor *time.Time, pageSize int) ([]Message, error) {
 	query := `
-		SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id
-		FROM messages
-		WHERE chat_room_id = $1 AND created_at < $2
-		ORDER BY created_at DESC
-		LIMIT $3
-	`
+			SELECT id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id
+			FROM messages
+			WHERE chat_room_id = $1 AND created_at < $2
+			ORDER BY created_at DESC
+			LIMIT $3
+		`
 	rows, err := r.db.QueryContext(ctx, query, chatRoomID, cursor, pageSize)
 	if err != nil {
 		return nil, fmt.Errorf("querying for paginated messages: %w", err)
