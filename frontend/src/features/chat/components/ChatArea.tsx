@@ -26,7 +26,6 @@ export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
     status,
   } = useChatMessages(chatRoomId);
   const chatAreaRef = useRef<HTMLDivElement>(null);
-
   const handleScroll: React.UIEventHandler<HTMLDivElement> = (event) => {
     const { scrollTop } = event.currentTarget;
 
@@ -40,11 +39,6 @@ export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
       chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
     }
   };
-
-  useEffect(() => {
-    // Scroll to the bottom after fetching or on initial load
-    scrollToBottom();
-  }, [data]); // Empty dependency array to run only on initial mount
 
   if (status === 'loading') return <p>Loading...</p>;
   if (status === 'error') return <p>Error: {error.message}</p>;
@@ -62,25 +56,35 @@ export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
   }
 
   const restAPIMessages: ServerMessageType[] = [];
+  const existingMessageIds = new Set(restAPIMessages.map((msg) => msg.id));
 
   if (data && data.pages) {
     data.pages.forEach((page) => {
       if (page.messages) {
-        const pageMessages = page.messages.map((message: unknown) => {
-          const serverMessage = message as ServerMessageType;
-          const adaptedMessage: ServerMessageType = {
-            id: serverMessage.id,
-            chat_room_id: serverMessage.chat_room_id,
-            sender:
-              serverMessage.sender_id === currentUserId ? 'sent' : 'received',
-            media_url: serverMessage.media_url,
-            created_at: serverMessage.created_at,
-            content: serverMessage.content,
-            sender_id: serverMessage.sender_id,
-          };
+        const pageMessages = page.messages
+          .map((message: unknown) => {
+            const serverMessage = message as ServerMessageType;
+            const adaptedMessage: ServerMessageType = {
+              id: serverMessage.id,
+              chat_room_id: serverMessage.chat_room_id,
+              sender:
+                serverMessage.sender_id === currentUserId ? 'sent' : 'received',
+              media_url: serverMessage.media_url,
+              created_at: serverMessage.created_at,
+              content: serverMessage.content,
+              sender_id: serverMessage.sender_id,
+            };
 
-          return adaptedMessage;
-        });
+            return adaptedMessage;
+          })
+          .filter((message) => {
+            // Filter out messages that are already in restAPIMessages
+            return !existingMessageIds.has(message.id);
+          });
+
+        // Update existingMessageIds to include new messages
+        pageMessages.forEach((message) => existingMessageIds.add(message.id));
+
         restAPIMessages.push(...pageMessages);
       }
     });

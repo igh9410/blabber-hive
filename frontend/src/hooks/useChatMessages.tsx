@@ -7,9 +7,7 @@ export function useChatMessages(chatRoomId: string) {
     ({ pageParam = '' }) => fetchChatMessagesFn(chatRoomId, pageParam),
     {
       getNextPageParam: (lastPage) => {
-        console.log('Last page data: ', lastPage);
-        const nextPage = lastPage.nextCursor;
-        console.log('Next page cursor: ', nextPage);
+        const nextPage = lastPage.nextCursor || '';
         return nextPage;
       },
     }
