@@ -61,8 +61,6 @@ export const useWebSocketConnection = () => {
 
       console.log('Receiving messages..', receivedMessage);
 
-      // receivedMessage.sender = 'received';
-
       addMessage(receivedMessage);
     };
 

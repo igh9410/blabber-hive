@@ -6,8 +6,11 @@ export function useChatMessages(chatRoomId: string) {
     ['chatMessages', chatRoomId],
     ({ pageParam = '' }) => fetchChatMessagesFn(chatRoomId, pageParam),
     {
-      getNextPageParam: (lastPage, pages) => {
-        lastPage.nextCursor ?? '';
+      getNextPageParam: (lastPage) => {
+        console.log('Last page data: ', lastPage);
+        const nextPage = lastPage.nextCursor;
+        console.log('Next page cursor: ', nextPage);
+        return nextPage;
       },
     }
   );

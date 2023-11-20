@@ -16,6 +16,7 @@ export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
   }));
   // Call the custom hook and pass the chatRoomId to it
   const chatRoomId = '25e4eb83-5210-448d-be58-3a4c355113be';
+
   const {
     data,
     error,
@@ -33,6 +34,17 @@ export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
       fetchNextPage();
     }
   };
+  // Scroll to bottom function
+  const scrollToBottom = () => {
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+    }
+  };
+
+  useEffect(() => {
+    // Scroll to the bottom after fetching or on initial load
+    scrollToBottom();
+  }, [data]); // Empty dependency array to run only on initial mount
 
   if (status === 'loading') return <p>Loading...</p>;
   if (status === 'error') return <p>Error: {error.message}</p>;
@@ -56,12 +68,11 @@ export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
       if (page.messages) {
         const pageMessages = page.messages.map((message: unknown) => {
           const serverMessage = message as ServerMessageType;
-          // ... rest of your mapping logic
           const adaptedMessage: ServerMessageType = {
             id: serverMessage.id,
             chat_room_id: serverMessage.chat_room_id,
             sender:
-              serverMessage.sender_id === currentUserId ? 'sent' : 'received', // Set the sender based on the current user's ID
+              serverMessage.sender_id === currentUserId ? 'sent' : 'received',
             media_url: serverMessage.media_url,
             created_at: serverMessage.created_at,
             content: serverMessage.content,
