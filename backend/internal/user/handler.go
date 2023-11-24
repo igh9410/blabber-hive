@@ -26,21 +26,16 @@ func (h *Handler) HandleOAuth2Callback(c *gin.Context) {
 		return
 	}
 
-	isRegistered, err := h.Service.IsUserRegistered(c.Request.Context(), userEmail)
+	username, err := h.Service.FindUserByEmail(c.Request.Context(), userEmail)
 
 	if err != nil {
 		log.Println("Error checking user registration:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
-		return
-	}
-
-	if !isRegistered {
 		log.Printf("User with email %v is not registered, needs to complete registration process...", userEmail)
-		c.JSON(http.StatusConflict, gin.H{"error": "User is not registered."})
+		c.JSON(http.StatusNotFound, gin.H{"error": "User is not registered."})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User is registered."})
+	c.JSON(http.StatusOK, username)
 }
 
 func (h *Handler) CreateUser(c *gin.Context) {

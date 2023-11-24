@@ -19,9 +19,9 @@ export function SignUpForm() {
         <h2>Sign Up</h2>
         <div className={styles.formGroup}>
           <label htmlFor="username">Username (required)</label>
-          <input />
+          <input type="text" id="username" name="username" />
         </div>
-        <div className="formGroup">
+        <div className={styles.formGroup}>
           <label htmlFor="profileImage">Profile Image (optional)</label>
           <input
             type="file"

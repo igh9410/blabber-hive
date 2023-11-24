@@ -66,13 +66,13 @@ func (s *service) IsUserRegistered(c context.Context, email string) (bool, error
 func (s *service) FindUserByEmail(c context.Context, email string) (*UserDTO, error) {
 	u, err := s.Repository.FindUserByEmail(c, email)
 	if err != nil {
+		log.Printf("Error occured with finding user by email %v: %v", email, err.Error())
 		return nil, err
 	}
 	r := &UserDTO{
 		ID:       u.ID,
 		Username: u.Username,
 	}
-	log.Printf("Email: %v", email)
-	log.Printf("User ID: %v, Username: %v", r.ID, r.Username)
+
 	return r, nil
 }
