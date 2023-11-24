@@ -3,7 +3,7 @@ import { Message } from './Message';
 import { useChatMessageStore } from '@stores';
 import { MessageType, ServerMessageType } from '../types';
 import { useChatMessages } from '@hooks';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { authTokenKey } from '@config';
 
 type ChatAreaProps = {
@@ -15,6 +15,7 @@ export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
     messages: state.messages,
   }));
   // Call the custom hook and pass the chatRoomId to it
+
   const chatRoomId = '25e4eb83-5210-448d-be58-3a4c355113be';
 
   const {
@@ -25,7 +26,9 @@ export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
     isFetchingNextPage,
     status,
   } = useChatMessages(chatRoomId);
+  const [initialLoad, setInitialLoad] = useState(true);
   const chatAreaRef = useRef<HTMLDivElement>(null);
+
   const handleScroll: React.UIEventHandler<HTMLDivElement> = (event) => {
     const { scrollTop } = event.currentTarget;
 
@@ -33,6 +36,7 @@ export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
       fetchNextPage();
     }
   };
+
   // Scroll to bottom function
   const scrollToBottom = () => {
     if (chatAreaRef.current) {
@@ -40,19 +44,14 @@ export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
     }
   };
 
-  if (status === 'loading') return <p>Loading...</p>;
-  if (status === 'error') return <p>Error: {error.message}</p>;
-
   const supabaseData = localStorage.getItem(authTokenKey);
 
   let currentUserId = '';
-
   if (supabaseData) {
     const parsedData = JSON.parse(supabaseData);
     currentUserId = parsedData.user.id;
   } else {
     console.error('No Supabase data found in Local Storage');
-    return null;
   }
 
   const restAPIMessages: ServerMessageType[] = [];
@@ -99,6 +98,20 @@ export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
   combinedMessages.sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );
+
+  useEffect(() => {
+    if (
+      initialLoad &&
+      (sortedRestAPIMessages.length > 0 || combinedMessages.length > 0)
+    ) {
+      scrollToBottom();
+      setInitialLoad(false); // Set initial load to false after scrolling
+    }
+  }, [sortedRestAPIMessages.length, combinedMessages.length, initialLoad]);
+
+  if (status === 'loading') return <p>Loading...</p>;
+  if (status === 'error') return <p>Error: {error.message}</p>;
+
   return (
     <div className={styles.chatArea} onScroll={handleScroll} ref={chatAreaRef}>
       {sortedRestAPIMessages.map((message) => (

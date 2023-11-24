@@ -25,15 +25,17 @@ export function Root() {
 
     return () => subscription.unsubscribe();
   }, []);
-
+  console.log('User = ', session?.user);
   if (!session) {
     return (
-      <div className={styles.authContainer}>
-        <Auth
-          supabaseClient={supabase}
-          providers={['google', 'apple', 'kakao', 'github']}
-          appearance={{ theme: ThemeSupa }}
-        />
+      <div className={styles.wrapperContainer}>
+        <div className={styles.authContainer}>
+          <Auth
+            supabaseClient={supabase}
+            providers={['google', 'apple', 'github']}
+            appearance={{ theme: ThemeSupa }}
+          />
+        </div>
       </div>
     );
   }

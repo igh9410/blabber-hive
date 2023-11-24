@@ -19,7 +19,7 @@ services:
       - blabber-hive
 
   zookeeper: # ZooKepper for Kafka
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.3
     container_name: blabber-hive-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -28,7 +28,7 @@ services:
       - blabber-hive
 
   broker: # Kafka Broker
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.3
     container_name: blabber-hive-broker
     ports:
       - "9092:9092"
@@ -62,7 +62,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   redis: # Redis Container
-    image: redis:latest
+    image: redis:7.2.3-alpine3.18
     container_name: blabber-hive-redis
     ports:
       - "6379:6379"

@@ -7,7 +7,7 @@ export function Lobby() {
   const handleNewMessage = (text: string) => {
     const newMessage: MessageType = {
       sender: 'sent',
-      senderID: '1', // TODO: replace with actual user ID
+      senderID: '1',
       content: text,
       createdAt: new Date(),
     };

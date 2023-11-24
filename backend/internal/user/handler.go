@@ -25,20 +25,6 @@ func (h *Handler) HandleOAuth2Callback(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	/*userEmail, exists := c.Get("email")
-
-	if !exists {
-		log.Println("Email does not exist")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Email does not exist in the context"})
-		return
-
-	}
-	emailStr, ok := userEmail.(string)
-	if !ok {
-		log.Println("Failed to assert userEmail as string")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to assert userEmail as string"})
-		return
-	} */
 
 	isRegistered, err := h.Service.IsUserRegistered(c.Request.Context(), userEmail)
 
@@ -53,6 +39,8 @@ func (h *Handler) HandleOAuth2Callback(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{"error": "User is not registered."})
 		return
 	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User is registered."})
 }
 
 func (h *Handler) CreateUser(c *gin.Context) {
