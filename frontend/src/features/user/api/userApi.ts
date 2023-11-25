@@ -2,21 +2,16 @@ import { axiosInstance } from '@lib/axios';
 import axios from 'axios';
 import { User } from '../types';
 import { getAccessToken } from '@utils';
-import Cookies from 'js-cookie';
 
 const userCheckURL = '/api/users/check';
 
-export async function fetchUserFn(): Promise<User> {
+export async function fetchUserFn(): Promise<User | null> {
   let accessToken = '';
 
   try {
-    accessToken = getAccessToken();
+    accessToken = await getAccessToken();
   } catch (error) {
-    if (error instanceof Error) {
-      console.error(error.message);
-    } else {
-      console.error('Failed to retrieve access token');
-    }
+    console.error('Error fetching user:', error);
     throw error;
   }
 
@@ -31,10 +26,14 @@ export async function fetchUserFn(): Promise<User> {
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error(`Error (${error.response?.status}):`, error.response?.data);
-    } else if (error instanceof Error) {
-      console.error('Non-Axios error:', error.message);
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          // User not found, treat as first login
+          return null;
+        }
+      }
     } else {
-      console.error('An unknown error occurred');
+      console.error('Error fetching user:', error);
     }
     throw error;
   }

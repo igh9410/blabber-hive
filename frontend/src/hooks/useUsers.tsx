@@ -1,6 +1,5 @@
 import { fetchUserFn } from '@features/user';
 import { useQuery } from '@tanstack/react-query';
-import { getAccessToken } from '@utils';
 
 export const useUsers = () => {
   const { data, isLoading, error } = useQuery({

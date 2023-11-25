@@ -15,8 +15,8 @@ export const supabase: SupabaseClient = createClient(
 
 interface AuthContextType {
   session: Session | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  isFirstLogin: boolean;
+  setIsFirstLogin: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextType>(null!); // Using `null!` as a workaround for initial value
@@ -29,6 +29,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
+  const [isFirstLogin, setIsFirstLogin] = useState<boolean>(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -37,23 +38,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
     });
+
+    const login = async (email: string, password: string): Promise<void> => {
+      // Implement login logic
+    };
+
+    const logout = async (): Promise<void> => {
+      // Implement logout logic
+    };
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string): Promise<void> => {
-    // Implement login logic
-  };
-
-  const logout = async (): Promise<void> => {
-    // Implement logout logic
-  };
-
   return (
-    <AuthContext.Provider value={{ session, login, logout }}>
+    <AuthContext.Provider value={{ session, isFirstLogin, setIsFirstLogin }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,19 +2,25 @@
 
 import { authTokenKey } from '@config';
 
-export const getAccessToken = (): string => {
-  const supabaseData = localStorage.getItem(authTokenKey);
+export const getAccessToken = async (): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const supabaseData = localStorage.getItem(authTokenKey);
 
-  if (!supabaseData) {
-    throw new Error('Authentication token not found');
-  }
+      if (!supabaseData) {
+        throw new Error('Authentication token not found');
+      }
 
-  const parsedData = JSON.parse(supabaseData);
-  const accessToken = parsedData.access_token;
+      const parsedData = JSON.parse(supabaseData);
+      const accessToken = parsedData.access_token;
 
-  if (!accessToken) {
-    throw new Error('Access token is missing in the stored data');
-  }
+      if (!accessToken) {
+        throw new Error('Access token is missing in the stored data');
+      }
 
-  return accessToken;
+      resolve(accessToken);
+    } catch (error) {
+      reject(error);
+    }
+  });
 };
