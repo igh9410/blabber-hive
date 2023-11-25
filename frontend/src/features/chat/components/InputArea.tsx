@@ -33,7 +33,7 @@ export function InputArea({ onMessageSend }: Readonly<InputAreaProps>) {
     <div className={styles.inputArea}>
       <input
         type="text"
-        placeholder="Type a message..."
+        placeholder="Message..."
         value={message}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}

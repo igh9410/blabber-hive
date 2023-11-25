@@ -46,7 +46,7 @@ func (r *repository) FindUserByEmail(ctx context.Context, email string) (*User, 
 	query := "SELECT id, email, username FROM users WHERE email = $1"
 	err := r.db.QueryRowContext(ctx, query, email).Scan(&u.ID, &u.Email, &u.Username)
 	if err != nil {
-		return &u, err
+		return nil, err
 	}
 
 	return &u, nil

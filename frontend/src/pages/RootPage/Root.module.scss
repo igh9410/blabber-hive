@@ -1,6 +1,14 @@
+.wrapperContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Ensure it takes at least full viewport height */
+}
 .authContainer {
+  display: grid;
+  width: 100%;
   max-width: 25rem; /* max-width in rem */
-  margin: 1rem auto; /* vertical and horizontal margin in rem */
+  margin: auto; /* vertical and horizontal margin in rem */
   padding: 1rem; /* padding in rem */
   box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1); /* shadow offset and blur in rem */
   border-radius: 0.5rem; /* border-radius in rem */
