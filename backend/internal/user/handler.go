@@ -45,13 +45,14 @@ func (h *Handler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	userID, err := common.UserIDValidator(c)
+	userID, err := common.UserIDValidator(c.MustGet("user_id"))
+	log.Println("User ID: ", userID)
 	if err != nil {
 		log.Printf("Error occured with user ID %v: %v", userID, err.Error())
 		return
 	}
 
-	userEmail, err := common.EmailValidator(c)
+	userEmail, err := common.EmailValidator(c.MustGet("email"))
 	if err != nil {
 		log.Printf("Error occured with user email %v: %v", userEmail, err.Error())
 		return
