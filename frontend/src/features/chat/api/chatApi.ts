@@ -23,7 +23,7 @@ export async function fetchChatMessagesFn(
   }
   try {
     // Make the request to fetch the chat messages
-    console.log('Fetching messages for cursor:', cursor);
+    // console.log('Fetching messages for cursor:', cursor);
     const { data } = await axiosInstance.get<ChatMessagesResponse>(
       chatMessagesURL,
       {

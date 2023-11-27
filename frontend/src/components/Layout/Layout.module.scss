@@ -1,5 +1,22 @@
 .layout {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* This ensures the container takes the full height of the viewport */
+  height: 100%; /* This ensures the container takes the full height of the viewport */
+}
+
+.wrapper {
+  display: flex;
+  flex-grow: 1; /* This ensures the wrapper takes the full height of the container */
+  height: 100%;
+  flex-direction: row;
+  width: 100%;
+}
+
+.headerWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+  width: 100%;
+  z-index: 1;
 }

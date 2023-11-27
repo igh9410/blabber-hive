@@ -44,7 +44,6 @@ export async function signUpFn({ username }: { username: string }) {
   try {
     // Retrieve the access token
     const accessToken = await getAccessToken();
-    console.log('Access token:', accessToken);
 
     const userData: { username: string } = {
       username,
