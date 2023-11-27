@@ -1,11 +1,13 @@
 import { WEBSOCKET_URL, authTokenKey } from '@config';
 import { MessageType, ServerMessageType } from '@features/chat';
+import { useAuth } from '@providers';
 import { useChatMessageStore } from '@stores';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 
 export const useWebSocketConnection = () => {
   const queryClient = useQueryClient();
+  const { session } = useAuth();
   const addMessage = useChatMessageStore((state) => state.addMessage);
 
   const [retryCount, setRetryCount] = useState(0);
@@ -15,8 +17,6 @@ export const useWebSocketConnection = () => {
 
   const sendMessage = (message: string) => {
     if (webSocket.current) {
-      console.log('Sending message:', message);
-
       webSocket.current.send(message); // serialize the object to a JSON string
     }
   };
@@ -49,10 +49,19 @@ export const useWebSocketConnection = () => {
 
     const handleWebSocketOnMessage = (event: MessageEvent) => {
       const serverMessage: ServerMessageType = JSON.parse(event.data);
-
+      console.log('Server message = ', serverMessage);
       // Convert the snake_case properties from the server message to camelCase for the MessageType
+      // Explicitly define the type of messageSenderId as 'sent' | 'received'
+      let messageSenderId: 'sent' | 'received';
+
+      if (session?.user?.id === serverMessage.sender_id) {
+        messageSenderId = 'sent';
+      } else {
+        messageSenderId = 'received';
+      }
+
       const receivedMessage: MessageType = {
-        sender: 'received',
+        sender: messageSenderId,
         senderID: serverMessage.sender_id,
         content: serverMessage.content,
         createdAt: new Date(serverMessage.created_at),

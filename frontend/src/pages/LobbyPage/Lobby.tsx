@@ -4,6 +4,7 @@ import { fetchUserFn } from '@features/user';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import styles from './Lobby.module.scss';
 
 export function Lobby() {
   const [messages, setMessages] = useState<MessageType[]>([]);
@@ -28,9 +29,10 @@ export function Lobby() {
   };
 
   return (
-    <>
+    <div className={styles.wrapper}>
       <ChatArea messages={messages} />
+
       <InputArea onMessageSend={handleNewMessage} />
-    </>
+    </div>
   );
 }

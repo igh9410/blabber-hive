@@ -15,7 +15,7 @@ export const useSignUp = () => {
     },
     onError: (error) => {
       // Error actions
-      console.log('Sign Up Failed');
+      //  console.log('Sign Up Failed');
       console.error('Error: ', error);
     },
   });
