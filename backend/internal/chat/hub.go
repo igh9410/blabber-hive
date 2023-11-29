@@ -1,10 +1,6 @@
 package chat
 
-import (
-	"log"
-
-	"github.com/google/uuid"
-)
+import "log"
 
 type BroadcastMessage struct {
 	Message []byte
@@ -12,8 +8,7 @@ type BroadcastMessage struct {
 }
 
 type Hub struct {
-	clients map[uuid.UUID][]*Client
-
+	clients    map[*Client]bool
 	broadcast  chan BroadcastMessage
 	register   chan *Client
 	unregister chan *Client
@@ -24,7 +19,7 @@ func NewHub() *Hub {
 		broadcast:  make(chan BroadcastMessage),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
-		clients:    make(map[uuid.UUID][]*Client),
+		clients:    make(map[*Client]bool),
 	}
 }
 
@@ -32,41 +27,27 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.register:
-			h.clients[client.chatroomID] = append(h.clients[client.chatroomID], client)
-			log.Println("Client roomID:", client.chatroomID)
+			h.clients[client] = true
 			log.Println("Client registered:", client)
 
 		case client := <-h.unregister:
-			if clientsInRoom, ok := h.clients[client.chatroomID]; ok {
-				for i, c := range clientsInRoom {
-					if c == client {
-						// Remove client from slice
-						h.clients[client.chatroomID] = append(clientsInRoom[:i], clientsInRoom[i+1:]...)
-						close(client.send)
-						log.Println("Client unregistered:", client)
-						break
-					}
-				}
-				if len(h.clients[client.chatroomID]) == 0 {
-					delete(h.clients, client.chatroomID)
-				}
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.send)
+				log.Println("Client unregistered:", client)
 			}
-
 		case broadcastMsg := <-h.broadcast:
-			if clientsInRoom, ok := h.clients[broadcastMsg.Sender.chatroomID]; ok {
-				log.Printf("Broadcasting message to clients in chat room: %s", broadcastMsg.Sender.chatroomID)
-				for _, client := range clientsInRoom {
-					if client != broadcastMsg.Sender {
-						select {
-						case client.send <- broadcastMsg.Message:
-							// Message sent successfully
-						default:
-							// Handle failed message send, e.g., close connection and remove client
-							close(client.send)
-							// Remove client from slice
-							// Note: This requires careful handling to avoid modifying the slice while iterating over it
-						}
-					}
+			log.Printf("Broadcasting message to %d clients: %s", len(h.clients), broadcastMsg.Message)
+			for client := range h.clients {
+				// Skip the sender
+				if client == broadcastMsg.Sender {
+					continue
+				}
+				select {
+				case client.send <- broadcastMsg.Message:
+				default:
+					close(client.send)
+					delete(h.clients, client)
 				}
 			}
 		}
