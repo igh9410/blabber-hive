@@ -2,6 +2,7 @@ package chat
 
 import (
 	"log"
+	"sync"
 
 	"github.com/google/uuid"
 )
@@ -12,8 +13,8 @@ type BroadcastMessage struct {
 }
 
 type Hub struct {
-	clients map[uuid.UUID][]*Client
-
+	clients    map[uuid.UUID][]*Client
+	mu         sync.Mutex
 	broadcast  chan BroadcastMessage
 	register   chan *Client
 	unregister chan *Client
@@ -37,20 +38,9 @@ func (h *Hub) Run() {
 			log.Println("Client registered:", client)
 
 		case client := <-h.unregister:
-			if clientsInRoom, ok := h.clients[client.chatroomID]; ok {
-				for i, c := range clientsInRoom {
-					if c == client {
-						// Remove client from slice
-						h.clients[client.chatroomID] = append(clientsInRoom[:i], clientsInRoom[i+1:]...)
-						close(client.send)
-						log.Println("Client unregistered:", client)
-						break
-					}
-				}
-				if len(h.clients[client.chatroomID]) == 0 {
-					delete(h.clients, client.chatroomID)
-				}
-			}
+			h.removeClient(client)
+			close(client.send)
+			log.Println("Client unregistered:", client)
 
 		case broadcastMsg := <-h.broadcast:
 			if clientsInRoom, ok := h.clients[broadcastMsg.Sender.chatroomID]; ok {
@@ -64,11 +54,29 @@ func (h *Hub) Run() {
 							// Handle failed message send, e.g., close connection and remove client
 							close(client.send)
 							// Remove client from slice
-							// Note: This requires careful handling to avoid modifying the slice while iterating over it
 						}
 					}
 				}
 			}
+		}
+	}
+}
+
+func (h *Hub) removeClient(client *Client) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if clientsInRoom, ok := h.clients[client.chatroomID]; ok {
+		newClientsInRoom := make([]*Client, 0)
+		for _, c := range clientsInRoom {
+			if c != client {
+				newClientsInRoom = append(newClientsInRoom, c)
+			}
+		}
+		if len(newClientsInRoom) == 0 {
+			delete(h.clients, client.chatroomID)
+		} else {
+			h.clients[client.chatroomID] = newClientsInRoom
 		}
 	}
 }
