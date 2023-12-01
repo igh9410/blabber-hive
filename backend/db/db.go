@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -46,6 +47,7 @@ func NewDatabase() (*Database, error) {
 	if err != nil {
 		return nil, err
 	}
+	log.Println("Database initialized")
 
 	return &Database{db: db}, nil
 }

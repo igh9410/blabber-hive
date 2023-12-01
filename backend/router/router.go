@@ -4,6 +4,7 @@ import (
 	"backend/api/middleware"
 
 	"backend/internal/chat"
+	"backend/internal/match"
 	"backend/internal/user"
 	"context"
 	"log"
@@ -27,6 +28,7 @@ type RouterConfig struct {
 	UserHandler   *user.Handler
 	ChatHandler   *chat.Handler
 	ChatWsHandler *chat.WsHandler
+	MatchHandler  *match.Handler
 	// Add future handlers here, e.g.:
 	// FriendHandler *friend.Handler
 }
@@ -78,6 +80,15 @@ func InitRouter(cfg *RouterConfig) {
 		chatRoutes.GET("/:id", cfg.ChatHandler.GetChatRoom)
 		chatRoutes.POST("/:id", cfg.ChatHandler.JoinChatRoom)
 		chatRoutes.GET("/:id/messages", cfg.ChatHandler.GetChatMessages)
+		// etc...
+	}
+
+	matchRoutes := r.Group("/api/matches")
+	matchRoutes.Use(middleware.EnsureValidToken())
+	{
+		// Define your routes here, e.g.
+		matchRoutes.POST("/", cfg.MatchHandler.EnqueUser)
+
 		// etc...
 	}
 

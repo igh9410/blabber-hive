@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -41,6 +41,7 @@ func (s *service) CreateUser(c context.Context, req *CreateUserReq, userID uuid.
 
 	r, err := s.Repository.CreateUser(ctx, u)
 	if err != nil {
+		slog.Error("Error creating user:", err)
 		return nil, err
 	}
 
@@ -56,6 +57,7 @@ func (s *service) CreateUser(c context.Context, req *CreateUserReq, userID uuid.
 func (s *service) IsUserRegistered(c context.Context, email string) (bool, error) {
 	_, err := s.Repository.FindUserByEmail(c, email)
 	if err == sql.ErrNoRows {
+		slog.Info("User not found with email %v: %v", email, err.Error())
 		return false, nil
 	} else if err != nil {
 		return false, err
@@ -66,7 +68,7 @@ func (s *service) IsUserRegistered(c context.Context, email string) (bool, error
 func (s *service) FindUserByEmail(c context.Context, email string) (*UserDTO, error) {
 	u, err := s.Repository.FindUserByEmail(c, email)
 	if err != nil {
-		log.Printf("Error occured with finding user by email %v: %v", email, err.Error())
+		slog.Error("Error occured with finding user by email %v: %v", email, err.Error())
 		return nil, err
 	}
 	r := &UserDTO{

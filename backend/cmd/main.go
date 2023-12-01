@@ -2,11 +2,14 @@ package main
 
 import (
 	"backend/db"
+	"backend/infra/kafka"
+	"backend/infra/redis"
 	"backend/internal/chat"
+	"backend/internal/match"
 	"backend/internal/user"
-	"backend/kafka"
 	"backend/router"
 	"log"
+	"log/slog"
 	"os"
 	"strconv"
 
@@ -17,7 +20,7 @@ import (
 
 func main() {
 	if err := godotenv.Load("../.env"); err != nil { // Running in local, must be run on go run . in ./cmd directory
-		log.Println("No .env file found. Using OS environment variables.")
+		slog.Info("No .env file found. Using OS environment variables.")
 	}
 
 	dbConn, err := db.NewDatabase()
@@ -30,7 +33,17 @@ func main() {
 			log.Printf("Error closing the database: %s", err)
 		}
 	}()
-	log.Println("Database initialized")
+
+	redisClient, err := redis.NewRedisClient()
+	if err != nil {
+		log.Fatalf("Could not initialize Redis connection: %s", err)
+	}
+
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			log.Printf("Error closing the Redis connection: %s", err)
+		}
+	}()
 
 	kafkaClient, err := kafka.NewKafkaClient()
 	if err != nil {
@@ -57,6 +70,10 @@ func main() {
 	go hub.Run()
 
 	chatWsHandler := chat.NewWsHandler(hub, chatSvc, kafkaProducer)
+
+	matchRep := match.NewRepository(redisClient)
+	matchSvc := match.NewService(matchRep)
+	matchHandler := match.NewHandler(matchSvc)
 
 	// Create an insert function with the database connection
 	insertFunc := kafka.NewInsertFunc(dbConn.GetDB())
@@ -86,6 +103,7 @@ func main() {
 		UserHandler:   userHandler,
 		ChatHandler:   chatHandler,
 		ChatWsHandler: chatWsHandler,
+		MatchHandler:  matchHandler,
 		// Future handlers can be added here without changing the InitRouter signature
 	}
 

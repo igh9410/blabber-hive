@@ -23,6 +23,7 @@ export async function fetchUserFn(): Promise<User | null> {
         Authorization: `Bearer ${accessToken}`,
       },
     });
+
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
