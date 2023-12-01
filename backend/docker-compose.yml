@@ -13,7 +13,7 @@ services:
     env_file:
       - ./.env.docker
     environment:
-      - REDIS_URL=redis:6379
+      - REDIS_URL=redis://redis:6379
       - KAFKA_BROKER_URL=broker:9092
       - TZ=Asia/Seoul
     networks:
