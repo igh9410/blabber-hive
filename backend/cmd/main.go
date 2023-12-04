@@ -8,6 +8,7 @@ import (
 	"backend/internal/match"
 	"backend/internal/user"
 	"backend/router"
+	"context"
 	"log"
 	"log/slog"
 	"os"
@@ -72,8 +73,13 @@ func main() {
 	chatWsHandler := chat.NewWsHandler(hub, chatSvc, kafkaProducer)
 
 	matchRep := match.NewRepository(redisClient)
-	matchSvc := match.NewService(matchRep)
+	matchSvc := match.NewService(matchRep, chatRep, redisClient)
 	matchHandler := match.NewHandler(matchSvc)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Implementing graceful shutdown of Redis client
+
+	go matchSvc.StartMatchmakingSubscriber(ctx)
 
 	// Create an insert function with the database connection
 	insertFunc := kafka.NewInsertFunc(dbConn.GetDB())
@@ -108,5 +114,5 @@ func main() {
 	}
 
 	router.InitRouter(routerConfig)
-
+	cancel()
 }

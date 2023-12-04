@@ -87,7 +87,8 @@ func InitRouter(cfg *RouterConfig) {
 	matchRoutes.Use(middleware.EnsureValidToken())
 	{
 		// Define your routes here, e.g.
-		matchRoutes.POST("/", cfg.MatchHandler.EnqueUser)
+		matchRoutes.POST("/", cfg.MatchHandler.EnqueueUser)
+		matchRoutes.DELETE("/:userId", cfg.MatchHandler.DequeueUser)
 
 		// etc...
 	}
@@ -97,7 +98,6 @@ func InitRouter(cfg *RouterConfig) {
 	chatWsRoutes := r.Group("/ws/chats")
 	chatWsRoutes.Use(middleware.WebSocketAuthMiddleware())
 	{
-		//chatWsRoutes.POST("/", cfg.ChatWsHandler.WsCreateChatRoom)
 		chatWsRoutes.GET("/:id", cfg.ChatWsHandler.RegisterClient)
 	}
 
