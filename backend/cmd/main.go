@@ -114,5 +114,5 @@ func main() {
 	}
 
 	router.InitRouter(routerConfig)
-
+	cancel()
 }
