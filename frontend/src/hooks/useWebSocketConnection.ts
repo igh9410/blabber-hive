@@ -5,7 +5,7 @@ import { useChatMessageStore } from '@stores';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 
-export const useWebSocketConnection = () => {
+export const useWebSocketConnection = (chatRoomId: string) => {
   const queryClient = useQueryClient();
   const { session } = useAuth();
   const addMessage = useChatMessageStore((state) => state.addMessage);
@@ -34,11 +34,7 @@ export const useWebSocketConnection = () => {
     }
 
     const webSocketURL =
-      WEBSOCKET_URL +
-      '/chats/' +
-      '25e4eb83-5210-448d-be58-3a4c355113be?' +
-      'token=' +
-      accessToken;
+      WEBSOCKET_URL + '/chats/' + chatRoomId + '?token=' + accessToken;
 
     webSocket.current = new WebSocket(webSocketURL);
 

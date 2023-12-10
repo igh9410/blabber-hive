@@ -3,15 +3,17 @@ import { fetchUserFn } from '@features/user';
 
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styles from './Lobby.module.scss';
+import { useNavigate, useParams } from 'react-router-dom';
+import styles from './ChatRoom.module.scss';
 
-export function Lobby() {
+export function ChatRoom() {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const { data } = useQuery({
     queryKey: ['users'],
     queryFn: fetchUserFn,
   });
+  const { id } = useParams(); // id is the chat room ID from the URL
+  const chatRoomId = id || '';
   const navigate = useNavigate();
 
   if (data === null) {
@@ -30,9 +32,9 @@ export function Lobby() {
 
   return (
     <div className={styles.wrapper}>
-      <ChatArea messages={messages} />
+      <ChatArea messages={messages} chatRoomId={chatRoomId} />
 
-      <InputArea onMessageSend={handleNewMessage} />
+      <InputArea onMessageSend={handleNewMessage} chatRoomId={chatRoomId} />
     </div>
   );
 }

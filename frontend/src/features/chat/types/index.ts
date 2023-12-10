@@ -1,3 +1,11 @@
+import { UUID } from '@types';
+
+export type ChatRoom = {
+  id: UUID;
+  name: string;
+  createdAt: Date;
+};
+
 export type MessageType = {
   sender: 'received' | 'sent';
   senderID: string;

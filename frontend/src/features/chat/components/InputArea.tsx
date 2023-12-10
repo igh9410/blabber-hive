@@ -4,11 +4,15 @@ import { useWebSocketConnection } from '@hooks/useWebSocketConnection';
 
 type InputAreaProps = {
   onMessageSend: (text: string) => void;
+  chatRoomId: string;
 };
 
-export function InputArea({ onMessageSend }: Readonly<InputAreaProps>) {
+export function InputArea({
+  onMessageSend,
+  chatRoomId,
+}: Readonly<InputAreaProps>) {
   const [message, setMessage] = useState(''); // State to hold the input value
-  const { sendMessage } = useWebSocketConnection();
+  const { sendMessage } = useWebSocketConnection(chatRoomId);
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage(e.target.value); // Update the state when input changes
   };

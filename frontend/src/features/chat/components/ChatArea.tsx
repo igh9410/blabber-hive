@@ -8,15 +8,17 @@ import { authTokenKey } from '@config';
 
 type ChatAreaProps = {
   messages: MessageType[];
+  chatRoomId: string;
 };
 
-export function ChatArea({ messages: propMessages }: Readonly<ChatAreaProps>) {
+export function ChatArea({
+  messages: propMessages,
+  chatRoomId,
+}: ChatAreaProps) {
   const { messages: storeMessages } = useChatMessageStore((state) => ({
     messages: state.messages,
   }));
   // Call the custom hook and pass the chatRoomId to it
-
-  const chatRoomId = '25e4eb83-5210-448d-be58-3a4c355113be';
 
   const {
     data,
