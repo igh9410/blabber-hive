@@ -76,3 +76,36 @@ export async function fetchChatRoomListFn(): Promise<ChatRoom[]> {
     throw error;
   }
 }
+
+export async function createChatRoomFn(name: string) {
+  let accessToken = '';
+
+  try {
+    accessToken = await getAccessToken();
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    throw error;
+  }
+
+  try {
+    const response = await axiosInstance.post(
+      chatRoomsURL,
+      { name },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error(`Error (${error.response?.status}):`, error.response?.data);
+    } else {
+      console.error('Error Creating chat room:', error);
+    }
+    throw error;
+  }
+}

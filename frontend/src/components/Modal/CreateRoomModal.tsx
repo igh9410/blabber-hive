@@ -1,5 +1,7 @@
 import { Button } from '@/shad-cn-ui/components/ui/button';
 import { Input } from '@/shad-cn-ui/components/ui/input';
+import { useCreateChatRoom } from '@hooks';
+import { useState } from 'react';
 
 type CreateRoomModalProps = {
   isOpen: boolean;
@@ -8,7 +10,25 @@ type CreateRoomModalProps = {
 };
 
 export function CreateRoomModal(props: Readonly<CreateRoomModalProps>) {
+  const [roomName, setRoomName] = useState('');
+  const { createChatRoom, isLoading, error } = useCreateChatRoom();
+
   if (!props.isOpen) return null; // If modal is closed, don't render anything
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRoomName(event.target.value);
+  };
+
+  const handleCreateClick = () => {
+    createChatRoom(roomName);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent default behavior like form submission or line break
+      handleCreateClick();
+    }
+  };
 
   return (
     <div
@@ -41,13 +61,19 @@ export function CreateRoomModal(props: Readonly<CreateRoomModalProps>) {
                     className="w-full bg-white shadow-none appearance-none pl-2 md:w-2/3 lg:w-2/3 dark:bg-gray-950"
                     placeholder="Room name..."
                     type="text"
+                    value={roomName}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
                   />
                 </div>
               </div>
             </div>
           </div>
           <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <Button className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+            <Button
+              onClick={handleCreateClick}
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+            >
               Create
             </Button>
             <Button
