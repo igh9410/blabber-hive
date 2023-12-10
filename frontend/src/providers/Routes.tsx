@@ -18,6 +18,7 @@ export function Routes() {
           path: '/chats/:id',
           element: <ChatRoom />,
         },
+
         {
           path: '/signup',
           element: <SignUp />,

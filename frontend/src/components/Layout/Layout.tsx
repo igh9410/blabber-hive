@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './Layout.module.scss';
 import { Header } from '@components/Header';
-import { LeftSideBar } from '@components/SideBar';
+import { Dashboard } from '@components/Dashboard/Dashboard';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -12,7 +12,7 @@ export const Layout = ({ children }: LayoutProps) => {
     <div className={styles.layout}>
       <div className={styles.headerWrapper}>
         <Header />
-        {children}
+        <Dashboard>{children}</Dashboard>
       </div>
     </div>
   );
