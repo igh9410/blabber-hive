@@ -1,11 +1,8 @@
-import {
-  RouterProvider,
-  createBrowserRouter,
-  redirect,
-} from 'react-router-dom';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { Root } from '@pages';
-import { Lobby } from '@pages/LobbyPage';
+import { ChatRoom } from '@pages/ChatRoomPage';
 import { SignUp } from '@pages/SignUpPage';
+import { RenewLobby } from '@pages/RenewLobbyPage';
 
 export function Routes() {
   const router = createBrowserRouter([
@@ -15,7 +12,11 @@ export function Routes() {
       children: [
         {
           path: '/',
-          element: <Lobby />,
+          element: <RenewLobby />,
+        },
+        {
+          path: '/chats/:id',
+          element: <ChatRoom />,
         },
         {
           path: '/signup',

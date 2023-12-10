@@ -1,7 +1,10 @@
 import { axiosInstance } from '@lib/axios';
-import { AxiosError } from 'axios';
-import { ChatMessagesResponse } from '../types';
+import axios, { AxiosError } from 'axios';
+import { ChatMessagesResponse, ChatRoom } from '../types';
 import { authTokenKey } from '@config';
+import { getAccessToken } from '@utils';
+
+const chatRoomsURL = `/api/chats/`;
 
 // Function to fetch chat messages with proper types
 export async function fetchChatMessagesFn(
@@ -40,5 +43,36 @@ export async function fetchChatMessagesFn(
     // Handle the error as you see fit for your application context
     // This could involve logging the error, returning a default response, throwing a custom error, etc.
     throw new Error(axiosError.message);
+  }
+}
+
+export async function fetchChatRoomListFn(): Promise<ChatRoom[]> {
+  // Create the URL to fetch the chat messages from
+
+  let accessToken = '';
+
+  try {
+    accessToken = await getAccessToken();
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    throw error;
+  }
+
+  try {
+    const response = await axiosInstance.get(chatRoomsURL, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error(`Error (${error.response?.status}):`, error.response?.data);
+    } else {
+      console.error('Error fetching chat rooms:', error);
+    }
+    throw error;
   }
 }

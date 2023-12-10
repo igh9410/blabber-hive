@@ -42,6 +42,9 @@ dockerbuild.sh
 # Python test scripts
 scripts/
 
+# Database migrations
+#db/migrations/*
+
 # Kubernetes files
 k8s/
 

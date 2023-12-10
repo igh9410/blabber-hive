@@ -8,6 +8,7 @@ import (
 
 type ChatRoom struct {
 	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -34,7 +35,12 @@ type ChatRoomInfo struct {
 	CreatedAt time.Time        `json:"created_at"`
 }
 
+type CreateChatRoomReq struct {
+	Name string `json:"name"`
+}
+
 type CreateChatRoomRes struct {
 	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
 }

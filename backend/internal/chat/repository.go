@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,6 +17,7 @@ type Repository interface {
 	FindChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
 	FindChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
+	FindChatRoomList(ctx context.Context) ([]*ChatRoom, error)
 	SaveMessage(ctx context.Context, message *Message) error
 	GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursor *time.Time, pageSize int) ([]Message, error)
 	GetFirstPageMessages(ctx context.Context, chatRoomID uuid.UUID, pageSize int) ([]Message, error)
@@ -43,9 +45,9 @@ func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*C
 	// Set the current timestamp for CreatedAt
 	chatRoom.CreatedAt = time.Now()
 
-	query := "INSERT INTO chat_rooms(id, created_at) VALUES ($1, $2) RETURNING id"
+	query := "INSERT INTO chat_rooms(id, name, created_at) VALUES ($1, $2, $3) RETURNING id"
 
-	err := r.db.QueryRowContext(ctx, query, chatRoom.ID, chatRoom.CreatedAt).Scan(&chatRoom.ID)
+	err := r.db.QueryRowContext(ctx, query, chatRoom.ID, chatRoom.Name, chatRoom.CreatedAt).Scan(&chatRoom.ID)
 	if err != nil {
 		log.Printf("Error creating chat room: %v", err)
 
@@ -126,6 +128,42 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
 		return nil, err2
 	}
 	return chatRoom, nil
+
+}
+
+func (r *repository) FindChatRoomList(ctx context.Context) ([]*ChatRoom, error) {
+	query := "SELECT id, name, created_at FROM chat_rooms"
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		slog.Error("Error occured with finding chat room list: ", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	chatRoomList := make([]*ChatRoom, 0)
+
+	for rows.Next() {
+		var name sql.NullString
+		chatRoom := &ChatRoom{}
+
+		err := rows.Scan(&chatRoom.ID, &name, &chatRoom.CreatedAt)
+		if err != nil {
+			slog.Error("Error occurred while scanning chat room list: ", err)
+			return nil, err
+		}
+
+		// Convert sql.NullString to string, defaulting to empty string if NULL
+		if name.Valid {
+			chatRoom.Name = name.String
+		} else {
+			chatRoom.Name = ""
+		}
+
+		chatRoomList = append(chatRoomList, chatRoom)
+	}
+
+	return chatRoomList, nil
 
 }
 

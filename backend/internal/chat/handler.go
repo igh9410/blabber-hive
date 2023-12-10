@@ -5,6 +5,7 @@ import (
 	"backend/internal/user"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -26,7 +27,15 @@ func NewHandler(s Service, u user.Service) *Handler {
 
 func (h *Handler) CreateChatRoom(c *gin.Context) {
 
-	res, err := h.Service.CreateChatRoom(c.Request.Context())
+	var req CreateChatRoomReq
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		slog.Error("Error binding CreateChatRoom JSON: " + err.Error())
+		return
+	}
+
+	res, err := h.Service.CreateChatRoom(c.Request.Context(), &req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -71,6 +80,15 @@ func (h *Handler) JoinChatRoom(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, res)
 
+}
+
+func (h *Handler) GetChatRoomList(c *gin.Context) {
+
+	chatRoomList, err := h.Service.GetChatRoomList(c)
+	if err != nil {
+		slog.Error("Error occured with getting chat room list %v: %v", chatRoomList, err.Error())
+	}
+	c.JSON(http.StatusOK, chatRoomList)
 }
 
 func (h *Handler) GetChatMessages(c *gin.Context) {

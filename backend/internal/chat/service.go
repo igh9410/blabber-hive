@@ -4,6 +4,7 @@ import (
 	"backend/internal/user"
 	"context"
 	"log"
+	"log/slog"
 	"time"
 
 	confluentKafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
@@ -12,10 +13,11 @@ import (
 )
 
 type Service interface {
-	CreateChatRoom(ctx context.Context) (*CreateChatRoomRes, error)
+	CreateChatRoom(ctx context.Context, req *CreateChatRoomReq) (*CreateChatRoomRes, error)
 	GetChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
 	GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
+	GetChatRoomList(ctx context.Context) ([]*ChatRoom, error)
 	RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error)
 	GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursorTime *time.Time, pageSize int) ([]Message, error)
 }
@@ -36,12 +38,14 @@ func NewService(repository Repository, userRepository user.Repository, kafkaProd
 	}
 }
 
-func (s *service) CreateChatRoom(c context.Context) (*CreateChatRoomRes, error) {
+func (s *service) CreateChatRoom(c context.Context, req *CreateChatRoomReq) (*CreateChatRoomRes, error) {
 
 	ctx, cancel := context.WithTimeout(c, s.timeout)
 	defer cancel()
 
-	chatRoom := &ChatRoom{}
+	chatRoom := &ChatRoom{
+		Name: req.Name,
+	}
 
 	r, err := s.Repository.CreateChatRoom(ctx, chatRoom)
 	if err != nil {
@@ -50,6 +54,7 @@ func (s *service) CreateChatRoom(c context.Context) (*CreateChatRoomRes, error) 
 
 	res := &CreateChatRoomRes{
 		ID:        r.ID,
+		Name:      r.Name,
 		CreatedAt: r.CreatedAt,
 	}
 
@@ -87,6 +92,16 @@ func (s *service) GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID)
 		return nil, err
 	}
 	return chatRoomInfo, nil
+}
+
+// GetChatRoomList implements Service.
+func (s *service) GetChatRoomList(ctx context.Context) ([]*ChatRoom, error) {
+	chatRoomList, err := s.Repository.FindChatRoomList(ctx)
+	if err != nil {
+		slog.Error("Error occured with finding chat room list: ", err)
+		return nil, err
+	}
+	return chatRoomList, nil
 }
 
 func (s *service) RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error) {
