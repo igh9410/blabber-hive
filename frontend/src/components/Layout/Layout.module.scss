@@ -1,6 +1,8 @@
 .layout {
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
+
   height: 100%; /* This ensures the container takes the full height of the viewport */
 }
 
@@ -14,6 +16,7 @@
 
 .headerWrapper {
   display: flex;
+
   flex-direction: column;
   height: 100%;
   justify-content: space-between;
