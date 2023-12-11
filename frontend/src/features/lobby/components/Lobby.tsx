@@ -11,10 +11,20 @@ import {
 } from '@/shad-cn-ui/components/ui/table';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { fetchUserFn } from '@features/user';
 
 export function Lobby() {
   const { chatRooms, isLoading, error } = useChatRoomList();
   const navigate = useNavigate();
+  const { data } = useQuery({
+    queryKey: ['users'],
+    queryFn: fetchUserFn,
+  });
+  if (data === null) {
+    // If data is null, then the user is first logging in, redirecting to sign up page
+    navigate('/signup');
+  }
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false); // Modal State for Create Room
 
