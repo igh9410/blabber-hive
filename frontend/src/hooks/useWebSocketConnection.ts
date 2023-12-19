@@ -64,8 +64,6 @@ export const useWebSocketConnection = (chatRoomId: string) => {
         img: serverMessage.media_url || undefined,
       };
 
-      console.log('Receiving messages..', receivedMessage);
-
       addMessage(receivedMessage);
     };
 

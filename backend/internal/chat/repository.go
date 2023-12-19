@@ -18,7 +18,7 @@ type Repository interface {
 	FindChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
 	FindChatRoomList(ctx context.Context) ([]*ChatRoom, error)
-	SaveMessage(ctx context.Context, message *Message) error
+
 	GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursor *time.Time, pageSize int) ([]Message, error)
 	GetFirstPageMessages(ctx context.Context, chatRoomID uuid.UUID, pageSize int) ([]Message, error)
 }
@@ -28,6 +28,7 @@ type DBTX interface {
 	PrepareContext(context.Context, string) (*sql.Stmt, error)
 	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
 	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
 }
 
 type repository struct {
@@ -39,6 +40,11 @@ func NewRepository(db DBTX) Repository {
 }
 
 func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*ChatRoom, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		slog.Error("Creating Chatroom transaction failed")
+		return nil, err // handle error appropriately
+	}
 	// Generate a UUID for user ID
 	chatRoom.ID = uuid.New()
 
@@ -47,10 +53,10 @@ func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*C
 
 	query := "INSERT INTO chat_rooms(id, name, created_at) VALUES ($1, $2, $3) RETURNING id"
 
-	err := r.db.QueryRowContext(ctx, query, chatRoom.ID, chatRoom.Name, chatRoom.CreatedAt).Scan(&chatRoom.ID)
+	err = r.db.QueryRowContext(ctx, query, chatRoom.ID, chatRoom.Name, chatRoom.CreatedAt).Scan(&chatRoom.ID)
 	if err != nil {
 		log.Printf("Error creating chat room: %v", err)
-
+		tx.Rollback()
 		return nil, errors.New("failed to create chat room")
 	}
 
@@ -122,11 +128,33 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
 	// INSERT into chat rooms, UNIQUE constraint will prevent duplicates
 	query := `INSERT INTO users_in_chat_rooms (user_id, chat_room_id) VALUES ($1, $2)`
 
-	_, err2 := r.db.ExecContext(ctx, query, userID, chatRoomID)
-
-	if err2 != nil {
-		return nil, err2
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		slog.Error("Joining chat room transaction failed")
+		return nil, err // handle error appropriately
 	}
+
+	// Ensure rollback in case of error
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				slog.Error("Transaction rollback failed: %v", rbErr)
+			}
+		}
+	}()
+
+	_, err = r.db.ExecContext(ctx, query, userID, chatRoomID)
+	if err != nil {
+		slog.Error("Error joining chat room, db execcontext: ", err)
+		return nil, err
+	}
+
+	// Commit transaction
+	if err = tx.Commit(); err != nil {
+		slog.Error("Transaction commit failed: ", err)
+		return nil, err
+	}
+
 	return chatRoom, nil
 
 }
@@ -165,21 +193,6 @@ func (r *repository) FindChatRoomList(ctx context.Context) ([]*ChatRoom, error) 
 
 	return chatRoomList, nil
 
-}
-
-func (r *repository) SaveMessage(ctx context.Context, message *Message) error {
-	query := `
-        INSERT INTO messages (id, chat_room_id, sender_id, content, media_url, created_at, read_at, deleted_by_user_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `
-
-	_, err := r.db.ExecContext(ctx, query, message.ID, message.ChatRoomID, message.SenderID, message.Content, message.MediaURL, message.CreatedAt, message.ReadAt, message.DeletedByUserID)
-	if err != nil {
-		log.Printf("Problem occured related to saving the message into the db, err: %v", err)
-		return err
-	}
-
-	return nil
 }
 
 func (r *repository) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID, cursor *time.Time, pageSize int) ([]Message, error) {
