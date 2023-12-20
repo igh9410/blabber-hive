@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
+	"log/slog"
 	"time"
 )
 
@@ -16,6 +17,9 @@ type DBTX interface {
 	PrepareContext(context.Context, string) (*sql.Stmt, error)
 	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
 	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
+	Commit() error
+	Rollback() error
 }
 
 type repository struct {
@@ -28,14 +32,37 @@ func NewRepository(db DBTX) Repository {
 
 func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) {
 
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		slog.Error("Creating User transaction failed")
+		return nil, err // handle error appropriately
+	}
+
+	// Ensure rollback in case of error
+	defer func() {
+		if err != nil {
+			if rbErr := tx.Rollback(); rbErr != nil {
+				slog.Error("Transaction rollback failed: %v", rbErr)
+			}
+		}
+	}()
+
 	// Set the current timestamp for CreatedAt
 	user.CreatedAt = time.Now()
 
 	query := "INSERT INTO users(id, username, email, profile_image_url, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id"
 
-	err := r.db.QueryRowContext(ctx, query, user.ID, user.Username, user.Email, user.ProfileImageURL, user.CreatedAt).Scan(&user.ID)
+	err = r.db.QueryRowContext(ctx, query, user.ID, user.Username, user.Email, user.ProfileImageURL, user.CreatedAt).Scan(&user.ID)
+
 	if err != nil {
-		return &User{}, err
+		slog.Error("Error creating user, db execcontext: ", err)
+		return nil, err
+	}
+
+	// Commit transaction
+	if err = tx.Commit(); err != nil {
+		slog.Error("Transaction commit failed: ", err)
+		return nil, err
 	}
 
 	return user, nil
