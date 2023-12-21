@@ -60,6 +60,12 @@ func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*C
 		return nil, errors.New("failed to create chat room")
 	}
 
+	// Commit the transaction on success
+	if err = tx.Commit(); err != nil {
+		slog.Error("Transaction commit failed: ", err)
+		return nil, err
+	}
+
 	return chatRoom, nil
 }
 
@@ -119,19 +125,10 @@ func (r *repository) FindChatRoomInfoByID(ctx context.Context, chatRoomID uuid.U
 }
 
 func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error) {
-	// Find the existing chat room first
-	chatRoom, err := r.FindChatRoomByID(ctx, chatRoomID)
-	if err != nil {
-		return nil, err
-	}
-
-	// INSERT into chat rooms, UNIQUE constraint will prevent duplicates
-	query := `INSERT INTO users_in_chat_rooms (user_id, chat_room_id) VALUES ($1, $2)`
-
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		slog.Error("Joining chat room transaction failed")
-		return nil, err // handle error appropriately
+		return nil, err
 	}
 
 	// Ensure rollback in case of error
@@ -143,7 +140,9 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
 		}
 	}()
 
-	_, err = r.db.ExecContext(ctx, query, userID, chatRoomID)
+	// INSERT into chat rooms, UNIQUE and FOREIGN KEY constraints will handle duplicates and non-existing chat room
+	query := `INSERT INTO users_in_chat_rooms (user_id, chat_room_id) VALUES ($1, $2)`
+	_, err = tx.ExecContext(ctx, query, userID, chatRoomID)
 	if err != nil {
 		slog.Error("Error joining chat room, db execcontext: ", err)
 		return nil, err
@@ -153,6 +152,9 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
 	if err = tx.Commit(); err != nil {
 		slog.Error("Transaction commit failed: ", err)
 		return nil, err
+	}
+	chatRoom := &ChatRoom{
+		ID: chatRoomID,
 	}
 
 	return chatRoom, nil

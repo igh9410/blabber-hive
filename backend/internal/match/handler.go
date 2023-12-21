@@ -3,7 +3,6 @@ package match
 import (
 	"backend/internal/common"
 	"log"
-	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +28,9 @@ func (h *Handler) EnqueueUser(c *gin.Context) {
 	res, err := h.Service.EnqueueUser(c.Request.Context(), userID)
 
 	if err != nil {
-		slog.Error("Error occured with enqueuing user ID %v: %v", userID, err.Error())
+		log.Printf("Error occurred with user ID %v: %v", userID, err.Error())
+		c.JSON((http.StatusBadRequest), gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusCreated, res)
@@ -47,7 +48,7 @@ func (h *Handler) DequeueUser(c *gin.Context) {
 
 	err := h.Service.DequeueUser(c.Request.Context(), userID)
 	if err != nil {
-		slog.Error("Error occurred with dequeuing user ID %v: %v", userID, err.Error())
+		log.Printf("Error occurred with dequeuing user ID %v: %v", userID, err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error removing user from queue"})
 		return
 	}
