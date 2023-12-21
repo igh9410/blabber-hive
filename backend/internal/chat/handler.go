@@ -86,7 +86,7 @@ func (h *Handler) GetChatRoomList(c *gin.Context) {
 
 	chatRoomList, err := h.Service.GetChatRoomList(c)
 	if err != nil {
-		slog.Error("Error occured with getting chat room list %v: %v", chatRoomList, err.Error())
+		log.Printf("Error occured with getting chat room list: %v", err.Error())
 	}
 	c.JSON(http.StatusOK, chatRoomList)
 }

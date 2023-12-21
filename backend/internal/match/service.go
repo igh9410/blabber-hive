@@ -4,7 +4,9 @@ import (
 	"backend/infra/redis"
 	"backend/internal/chat"
 	"context"
+	"log"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -83,7 +85,6 @@ func (s *service) StartMatchmakingSubscriber(ctx context.Context) {
 			if msg == nil {
 				continue // or handle the nil message scenario
 			}
-			slog.Info("Received matchmaking request for user:", msg.Payload)
 
 			// Trigger matchmaking logic
 			if err := s.performMatchmaking(msg.Payload); err != nil {
@@ -111,7 +112,7 @@ func (s *service) performMatchmaking(userID string) error {
 	}
 
 	if matchID == "" {
-		slog.Info("No suitable match found for user:", userID)
+		slog.Error("EnqueueUser error", "userID", userID, "error", err.Error())
 		return nil // or custom error indicating no match found
 	}
 
@@ -129,8 +130,8 @@ func (s *service) handleMatch(userID, matchID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), s.timeout)
 	defer cancel()
 
-	removedIDs := []string{userID, matchID} // Remove two users from the queue to form a match
-	slog.Info("Match found for users:", removedIDs)
+	removedIDs := []string{userID, matchID}                                 // Remove two users from the queue to form a match
+	log.Printf("Match found for users: %s", strings.Join(removedIDs, ", ")) // Fix the format specifier from %d to %s
 	err := s.Repository.DequeueUsers(ctx, removedIDs...)
 	// Code goes here
 	if err != nil {
@@ -141,7 +142,8 @@ func (s *service) handleMatch(userID, matchID string) error {
 
 	_, err = s.ChatRepository.CreateChatRoom(ctx, chatRoom)
 	if err != nil {
-		slog.Error("Error creating chat room:", err)
+		log.Print("Error creating chat room:", err)
+		return err
 	}
 	return nil
 }

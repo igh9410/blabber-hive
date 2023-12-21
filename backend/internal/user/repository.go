@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	"database/sql"
-	"log/slog"
+	"log"
 	"time"
 )
 
@@ -18,8 +18,6 @@ type DBTX interface {
 	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
 	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
 	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
-	Commit() error
-	Rollback() error
 }
 
 type repository struct {
@@ -34,7 +32,7 @@ func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) 
 
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		slog.Error("Creating User transaction failed")
+		log.Println("Creating User transaction failed")
 		return nil, err // handle error appropriately
 	}
 
@@ -42,7 +40,7 @@ func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) 
 	defer func() {
 		if err != nil {
 			if rbErr := tx.Rollback(); rbErr != nil {
-				slog.Error("Transaction rollback failed: %v", rbErr)
+				log.Printf("Transaction rollback failed: %v", rbErr)
 			}
 		}
 	}()
@@ -55,13 +53,13 @@ func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) 
 	err = r.db.QueryRowContext(ctx, query, user.ID, user.Username, user.Email, user.ProfileImageURL, user.CreatedAt).Scan(&user.ID)
 
 	if err != nil {
-		slog.Error("Error creating user, db execcontext: ", err)
+		log.Printf("Error creating user, db execcontext: %d", err)
 		return nil, err
 	}
 
 	// Commit transaction
 	if err = tx.Commit(); err != nil {
-		slog.Error("Transaction commit failed: ", err)
+		log.Printf("Transaction commit failed: %d", err)
 		return nil, err
 	}
 
