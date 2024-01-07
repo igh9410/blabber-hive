@@ -53,13 +53,13 @@ func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) 
 	err = r.db.QueryRowContext(ctx, query, user.ID, user.Username, user.Email, user.ProfileImageURL, user.CreatedAt).Scan(&user.ID)
 
 	if err != nil {
-		log.Printf("Error creating user, db execcontext: %d", err)
+		log.Printf("Error creating user, db execcontext: %v", err)
 		return nil, err
 	}
 
 	// Commit transaction
 	if err = tx.Commit(); err != nil {
-		log.Printf("Transaction commit failed: %d", err)
+		log.Printf("Transaction commit failed: %v", err)
 		return nil, err
 	}
 
