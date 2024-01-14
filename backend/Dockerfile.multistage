@@ -16,7 +16,7 @@ COPY . .
 RUN CGO_ENABLED=1 GOOS=linux go test -v ./...
 
 # Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -o blabber-hive ./cmd/main.go
+RUN CGO_ENABLED=1 GOOS=linux go build -o blabber-hive ./cmd/blabber-hive/main.go
 
 
 # Deploy the application binary into a lean image
