@@ -2,6 +2,7 @@ package router
 
 import (
 	"backend/api/middleware"
+	myPrometheus "backend/infra/prometheus"
 
 	"backend/internal/chat"
 	"backend/internal/match"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"     // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
@@ -48,6 +50,10 @@ func InitRouter(cfg *RouterConfig) {
 		//time.Sleep(5 * time.Second)
 		c.String(http.StatusOK, "Welcome Gin Server")
 	})
+
+	myPrometheus.InitPrometheusMetrics()
+	// Expose the registered metrics via HTTP.
+	r.GET("/metrics", gin.WrapH(promhttp.HandlerFor(myPrometheus.Reg, promhttp.HandlerOpts{})))
 
 	// Add Swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

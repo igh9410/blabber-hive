@@ -79,6 +79,22 @@ services:
   # command: "/tmp/create-kafka-topics.sh"
   # networks:
   #   - blabber-hive
+  prometheus:
+    image: prom/prometheus
+    container_name: blabber-hive-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - blabber-hive
+  grafana:
+    image: grafana/grafana
+    container_name: blabber-hive-grafana
+    ports:
+      - "3001:3000"
+    networks:
+      - blabber-hive
 
 networks:
   blabber-hive:
