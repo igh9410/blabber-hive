@@ -56,7 +56,10 @@ func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*C
 	err = r.db.QueryRowContext(ctx, query, chatRoom.ID, chatRoom.Name, chatRoom.CreatedAt).Scan(&chatRoom.ID)
 	if err != nil {
 		log.Printf("Error creating chat room: %v", err)
-		tx.Rollback()
+		if rbErr := tx.Rollback(); rbErr != nil {
+			slog.Error("Transaction rollback failed: %v", rbErr)
+		}
+
 		return nil, errors.New("failed to create chat room")
 	}
 
