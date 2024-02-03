@@ -13,7 +13,9 @@ import { useUsers } from '@hooks';
 
 const ProtectedRoutes = () => {
   const { data: userData, isLoading } = useUsers();
-  if (isLoading) return null;
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return userData ? <Outlet /> : <Navigate to="/signup" />;
 };
