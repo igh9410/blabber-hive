@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load("../.env"); err != nil { // Running in local, must be run on go run . in ./cmd directory
+	if err := godotenv.Load(".env"); err != nil { // Running in local, must be run on go run . in ./cmd directory
 		slog.Info("No .env file found. Using OS environment variables.")
 	}
 
