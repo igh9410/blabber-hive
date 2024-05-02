@@ -1,4 +1,3 @@
-version: "3"
 services:
   blabber-hive:
     image: igh9410/blabber-hive:v1
@@ -11,7 +10,7 @@ services:
       - broker
       - zookeeper
     env_file:
-      - ./.env.docker
+      - .env.docker
     environment:
       - REDIS_URL=redis://redis:6379
       - KAFKA_BROKER_URL=broker:9092
