@@ -1,0 +1,17 @@
+# docker-compose.yml
+services:
+  fastapi:
+    container_name: sentiment-analysis-server
+    ports:
+      - "8000:8000"
+    image: sentiment-analysis:v1
+
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - fastapi
