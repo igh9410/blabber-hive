@@ -1,6 +1,6 @@
 services:
   blabber-hive:
-    image: igh9410/blabber-hive:v1
+    image: blabber-hive:v1
     container_name: blabber-hive
     ports:
       - "8080:8080"

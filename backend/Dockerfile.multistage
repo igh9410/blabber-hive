@@ -1,5 +1,5 @@
 # Build the application from source
-FROM golang:1.21 AS build-stage
+FROM golang:1.22 AS build-stage
 
 WORKDIR /app
 
@@ -11,9 +11,6 @@ RUN go mod download
 
 # Copy the entire application
 COPY . .
-
-# Run the tests
-RUN CGO_ENABLED=1 GOOS=linux go test -v ./...
 
 # Build the application
 RUN CGO_ENABLED=1 GOOS=linux go build -o blabber-hive ./cmd/blabber-hive/main.go

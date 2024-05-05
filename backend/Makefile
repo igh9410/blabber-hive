@@ -9,11 +9,12 @@ run:
 	@go run cmd/blabber-hive/main.go
 
 # Build the application using Docker
-docker-build:
-	@echo "Generating Swagger documentation before building the application..."
-	@swag init -g cmd/blabber-hive/main.go
-	@echo "Building the application using Docker..."
-	@./scripts/docker-build.sh
+docker-push:
+#@echo "Generating Swagger documentation before building the application..."
+#	@swag init -g cmd/blabber-hive/main.go
+#	@echo "Building the application using Docker..."
+	@./scripts/docker-push.sh
+
 
 # Run the application using Docker Compose
 docker-run:
