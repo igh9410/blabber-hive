@@ -15,7 +15,7 @@ import (
 type Service interface {
 	CreateChatRoom(ctx context.Context, req *CreateChatRoomReq) (*CreateChatRoomRes, error)
 	GetChatRoomByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoom, error)
-	GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error)
+	//GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error)
 	JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error)
 	GetChatRoomList(ctx context.Context) ([]*ChatRoom, error)
 	RegisterClient(ctx context.Context, hub *Hub, conn *websocket.Conn, chatroomID uuid.UUID, userID uuid.UUID, kafkaProducer *confluentKafka.Producer) (*Client, error)
@@ -84,6 +84,7 @@ func (s *service) JoinChatRoomByID(ctx context.Context, chatroomId uuid.UUID, us
 
 }
 
+/*
 // GetChatRoomInfoByID implements Service.
 func (s *service) GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error) {
 	chatRoomInfo, err := s.Repository.FindChatRoomInfoByID(ctx, chatRoomID)
@@ -92,7 +93,7 @@ func (s *service) GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID)
 		return nil, err
 	}
 	return chatRoomInfo, nil
-}
+} */
 
 // GetChatRoomList implements Service.
 func (s *service) GetChatRoomList(ctx context.Context) ([]*ChatRoom, error) {

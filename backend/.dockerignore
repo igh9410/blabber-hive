@@ -9,3 +9,4 @@
 ./index.html
 ./index2.html
 ./kubernetes/*
+postgres-data/

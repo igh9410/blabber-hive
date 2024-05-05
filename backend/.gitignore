@@ -40,7 +40,7 @@ dockerbuild.sh
 *.sh
 
 # Python test scripts
-scripts/
+#scripts/
 
 # Database migrations
 #db/migrations/*
