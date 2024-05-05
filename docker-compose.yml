@@ -1,0 +1,125 @@
+services:
+  blabber-hive:
+    image: igh9410/blabber-hive:v1
+    container_name: blabber-hive
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+      - broker
+      - zookeeper
+    env_file:
+      - backend/.env.docker
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKER_URL=broker:9092
+      - TZ=Asia/Seoul
+    networks:
+      - blabber-hive
+
+  fastapi:
+    container_name: sentiment-analysis-server
+    ports:
+      - "8000:8000"
+    image: sentiment-analysis:v1
+    environment:
+      - TZ=Asia/Seoul
+    networks:
+      - blabber-hive
+
+  nginx:
+    container_name: nginx
+    image: nginx:latest
+    ports:
+      - "8001:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - blabber-hive
+      - fastapi
+    networks:
+      - blabber-hive
+
+  zookeeper: # ZooKepper for Kafka
+    image: confluentinc/cp-zookeeper:7.4.3
+    container_name: blabber-hive-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - blabber-hive
+
+  broker: # Kafka Broker
+    image: confluentinc/cp-kafka:7.4.3
+    container_name: blabber-hive-broker
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_INTERNAL://broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    volumes:
+      - ./wait-for-it.sh:/wait-for-it.sh
+    #command:
+    #  ["/wait-for-it.sh", "zookeeper:2181", "--", "/etc/confluent/docker/run"]
+    networks:
+      - blabber-hive
+
+  postgres: # Postgres Container
+    image: postgres:15.5-alpine
+    container_name: blabber-hive-postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - blabber-hive
+    env_file:
+      - backend/.env.docker
+    volumes:
+      - ./database:/var/lib/postgresql/data
+
+  redis: # Redis Container
+    image: redis:7.2.3-alpine3.18
+    container_name: blabber-hive-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - blabber-hive
+  kafka-setup:
+    image: confluentinc/cp-kafka:latest
+    container_name: blabber-hive-kafka-setup
+    depends_on:
+      - broker
+    volumes:
+      - ./backend/create-kafka-topics.sh:/tmp/create-kafka-topics.sh
+    command: "/tmp/create-kafka-topics.sh"
+    networks:
+      - blabber-hive
+
+  prometheus:
+    image: prom/prometheus
+    container_name: blabber-hive-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./backend/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - blabber-hive
+  grafana:
+    image: grafana/grafana
+    container_name: blabber-hive-grafana
+    ports:
+      - "3001:3000"
+    networks:
+      - blabber-hive
+
+networks:
+  blabber-hive:
+    driver: bridge
