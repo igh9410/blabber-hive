@@ -42,7 +42,7 @@ func NewRepository(db DBTX) Repository {
 func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*ChatRoom, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		slog.Error("Creating Chatroom transaction failed")
+		slog.Error("Creating Chatroom transaction failed: ", err.Error(), " in CreateChatRoom")
 		return nil, err // handle error appropriately
 	}
 	// Generate a UUID for user ID
@@ -51,22 +51,9 @@ func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*C
 	// Set the current timestamp for CreatedAt
 	chatRoom.CreatedAt = time.Now()
 
-	query := "INSERT INTO chat_rooms(id, name, created_at) VALUES ($1, $2, $3) RETURNING id"
-
-	err = r.db.QueryRowContext(ctx, query, chatRoom.ID, chatRoom.Name, chatRoom.CreatedAt).Scan(&chatRoom.ID)
-	if err != nil {
-		log.Printf("Error creating chat room: %v", err)
-		if rbErr := tx.Rollback(); rbErr != nil {
-			slog.Error("Transaction rollback failed: %v", rbErr)
-		}
-
-		return nil, errors.New("failed to create chat room")
-	}
-
-	// Commit the transaction on success
-	if err = tx.Commit(); err != nil {
-		slog.Error("Transaction commit failed: ", err)
-		return nil, err
+	if rbErr := tx.Rollback(); rbErr != nil {
+		slog.Error("Transaction rollback failed: %v", rbErr.Error(), " in CreateChatRoom")
+		return nil, rbErr
 	}
 
 	return chatRoom, nil
@@ -113,7 +100,7 @@ func (r *repository) FindChatRoomInfoByID(ctx context.Context, chatRoomID uuid.U
 		var userInChatRoom UserInChatRoom
 		err := rows.Scan(&userInChatRoom.ID, &userInChatRoom.UserID, &userInChatRoom.ChatRoomID, &createdAt)
 		if err != nil {
-			log.Printf("Failed to scan chat room info, err: %v", err)
+			log.Printf("Failed to scan chat room info, err: %v", err.Error())
 			return nil, err
 		}
 		usersInChatRoom = append(usersInChatRoom, userInChatRoom)
@@ -137,7 +124,7 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
 	defer func() {
 		if err != nil {
 			if rbErr := tx.Rollback(); rbErr != nil {
-				slog.Error("Transaction rollback failed: %v", rbErr)
+				slog.Error("Transaction rollback failed: ", rbErr.Error(), " in JoinChatRoomByID")
 			}
 		}
 	}()
@@ -146,13 +133,13 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
 	query := `INSERT INTO users_in_chat_rooms (user_id, chat_room_id) VALUES ($1, $2)`
 	_, err = tx.ExecContext(ctx, query, userID, chatRoomID)
 	if err != nil {
-		slog.Error("Error joining chat room, db execcontext: ", err)
+		slog.Error("Error joining chat room, db execcontext: ", err.Error(), " in JoinChatRoomByID")
 		return nil, err
 	}
 
 	// Commit transaction
 	if err = tx.Commit(); err != nil {
-		slog.Error("Transaction commit failed: ", err)
+		slog.Error("Transaction commit failed: ", err.Error(), " in JoinChatRoomByID")
 		return nil, err
 	}
 	chatRoom := &ChatRoom{
@@ -168,7 +155,7 @@ func (r *repository) FindChatRoomList(ctx context.Context) ([]*ChatRoom, error) 
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
-		slog.Error("Error occured with finding chat room list: ", err)
+		slog.Error("Error occured with finding chat room list: ", err.Error(), " in FindChatRoomList")
 		return nil, err
 	}
 	defer rows.Close()
@@ -181,7 +168,7 @@ func (r *repository) FindChatRoomList(ctx context.Context) ([]*ChatRoom, error) 
 
 		err := rows.Scan(&chatRoom.ID, &name, &chatRoom.CreatedAt)
 		if err != nil {
-			slog.Error("Error occurred while scanning chat room list: ", err)
+			slog.Error("Error occurred while scanning chat room list: ", err.Error(), " in FindChatRoomList")
 			return nil, err
 		}
 

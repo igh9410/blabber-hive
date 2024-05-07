@@ -44,14 +44,14 @@ func (s *service) EnqueueUser(c context.Context, userID uuid.UUID) (*EnqueUserRe
 	r, err := s.Repository.EnqueueUser(ctx, userID)
 
 	if err != nil {
-		slog.Error("Error enqueuing user:", err)
+		slog.Error("Error enqueuing user:", err.Error(), " in EnqueueUser")
 		return nil, err
 	}
 
 	// Publish an event to the Redis channel
 	err = s.redisClient.Publish(ctx, "matchmaking_channel", userID.String()).Err()
 	if err != nil {
-		slog.Error("Error publishing to matchmaking channel:", err)
+		slog.Error("Error publishing to matchmaking channel:", err.Error(), " in EnqueueUser")
 		return nil, err
 	}
 	slog.Info("User enqueued successfully")
@@ -98,7 +98,7 @@ func (s *service) performMatchmaking(userID string) error {
 	// Fetch potential match candidates
 	candidates, err := s.Repository.FetchCandidates(context.Background())
 	if err != nil {
-		slog.Error("Error fetching match candidates:", err)
+		slog.Error("Error fetching match candidates:", err.Error(), " in performMatchmaking")
 		return err
 	}
 
@@ -119,7 +119,7 @@ func (s *service) performMatchmaking(userID string) error {
 	// Handle the match
 	err = s.handleMatch(userID, matchID)
 	if err != nil {
-		slog.Error("Error handling match:", err)
+		slog.Error("Error handling match:", err.Error(), " in performMatchmaking")
 		return err
 	}
 	// Rest of the matchmaking logic...
@@ -135,7 +135,7 @@ func (s *service) handleMatch(userID, matchID string) error {
 	err := s.Repository.DequeueUsers(ctx, removedIDs...)
 	// Code goes here
 	if err != nil {
-		slog.Error("Error dequeuing users:", err)
+		slog.Error("Error dequeuing users:", err.Error(), " in handleMatch")
 		return err
 	}
 	chatRoom := &chat.ChatRoom{}

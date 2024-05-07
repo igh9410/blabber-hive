@@ -23,7 +23,7 @@ docker-run:
 
 # Run golangci-lint
 linter:
-	golangci-lint run
+	@golangci-lint run
 
 # Create database migration file
 create-migration:

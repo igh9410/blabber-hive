@@ -1,3 +1,5 @@
 ./database/*
 .env
 .env.*
+k8s
+./k8s/configmaps/*

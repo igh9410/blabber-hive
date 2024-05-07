@@ -45,18 +45,29 @@ func main() {
 			log.Printf("Error closing the Redis connection: %s", err)
 		}
 	}()
+	/*
+		kafkaClient, err := kafka.NewKafkaClient()
+		if err != nil {
+			log.Printf("Failed to initialize Kafka cluster connection")
+		}
+		defer kafkaClient.Close()
 
-	kafkaClient, err := kafka.NewKafkaClient()
-	if err != nil {
-		log.Printf("Failed to initialize Kafka cluster connection")
-	}
-	defer kafkaClient.Close()
+		kafkaProducer, err := kafka.KafkaProducer()
+		if err != nil {
+			log.Printf("Failed to initialize Kafka producer")
+		}
+		defer kafkaProducer.Close() */
 
-	kafkaProducer, err := kafka.KafkaProducer()
-	if err != nil {
-		log.Printf("Failed to initialize Kafka producer")
-	}
+	// Start the Kafka reconnection loop
+	stopReconnect := make(chan struct{})
+	kafkaConnected, kafkaProducer := kafka.ReconnectLoop(stopReconnect)
+
+	// Wait for successful Kafka connection
+	<-kafkaConnected
+
+	// Use the kafkaProducer instance
 	defer kafkaProducer.Close()
+	// ... (rest of the code that uses kafkaProducer)
 
 	userRep := user.NewRepository(dbConn.GetDB())
 	userSvc := user.NewService(userRep)
@@ -112,6 +123,7 @@ func main() {
 		MatchHandler:  matchHandler,
 		// Future handlers can be added here without changing the InitRouter signature
 	}
+	close(stopReconnect)
 
 	router.InitRouter(routerConfig)
 	cancel()
