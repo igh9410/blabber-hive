@@ -20,7 +20,7 @@ func NewRedisClient() (*RedisClient, error) {
 	// Parse the Redis URL
 	opt, err := redis.ParseURL(redisURL)
 	if err != nil {
-		slog.Error("Failed to parse Redis URL: %s\n", err)
+		slog.Error("Failed to parse Redis URL: %s\n", err.Error(), " in NewRedisClient")
 	}
 
 	client := redis.NewClient(opt)

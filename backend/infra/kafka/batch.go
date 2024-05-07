@@ -92,7 +92,11 @@ func NewInsertFunc(db *sql.DB) func([]chat.Message) error {
 			strings.Join(valueStrings, ","))
 		_, err = tx.Exec(stmt, valueArgs...)
 		if err != nil {
-			tx.Rollback() // Rollback in case of error
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				// Log or handle the rollback error appropriately
+				log.Printf("Error rolling back transaction: %s", rollbackErr)
+				return rollbackErr
+			}
 			return err
 		}
 

@@ -41,7 +41,7 @@ func (s *service) CreateUser(c context.Context, req *CreateUserReq, userID uuid.
 
 	r, err := s.Repository.CreateUser(ctx, u)
 	if err != nil {
-		slog.Error("Error creating user:", err)
+		slog.Error("Error creating user:", err.Error(), " in CreateUser")
 		return nil, err
 	}
 

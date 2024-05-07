@@ -99,7 +99,7 @@ func (s *service) GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID)
 func (s *service) GetChatRoomList(ctx context.Context) ([]*ChatRoom, error) {
 	chatRoomList, err := s.Repository.FindChatRoomList(ctx)
 	if err != nil {
-		slog.Error("Error occured with finding chat room list: ", err)
+		slog.Error("Error occured with finding chat room list: ", err.Error(), "in service.GetChatRoomList")
 		return nil, err
 	}
 	return chatRoomList, nil

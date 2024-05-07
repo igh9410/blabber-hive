@@ -32,7 +32,7 @@ func (r *repository) EnqueueUser(ctx context.Context, userID uuid.UUID) (*EnqueU
 	added, err := r.redisClient.SAdd(ctx, "match_queue", userID.String()).Result()
 
 	if err != nil {
-		slog.Error("Error adding user to the matchmaking queue:", err)
+		slog.Error("Error adding user to the matchmaking queue:", err.Error(), " in EnqueueUser")
 		return nil, err
 	}
 	if added == 0 { // User already in the queue
@@ -50,7 +50,7 @@ func (r *repository) DequeueUser(ctx context.Context, userID string) error {
 	// Use SREM command
 	_, err := r.redisClient.SRem(ctx, "match_queue", userID).Result()
 	if err != nil {
-		slog.Error("Error removing user from the matchmaking queue:", err)
+		slog.Error("Error removing user from the matchmaking queue:", err.Error(), " in DequeueUser")
 		return err
 	}
 	slog.Info(fmt.Sprintf("User with ID %s removed from the matchmaking queue", userID))
@@ -62,7 +62,7 @@ func (r *repository) FetchCandidates(ctx context.Context) ([]string, error) {
 	// For example, if you're using a Redis SET, you might use SMEMBERS to get all members
 	candidates, err := r.redisClient.SMembers(ctx, "match_queue").Result()
 	if err != nil {
-		slog.Error("Error fetching candidates from the matchmaking queue:", err)
+		slog.Error("Error fetching candidates from the matchmaking queue:", err.Error(), " in FetchCandidates")
 		return nil, err
 	}
 
@@ -76,7 +76,7 @@ func (r *repository) DequeueUsers(ctx context.Context, userIDs ...string) error 
 
 	_, err := r.redisClient.SRem(ctx, "match_queue", userIDs).Result()
 	if err != nil {
-		slog.Error("Error removing users from the matchmaking queue:", err)
+		slog.Error("Error removing users from the matchmaking queue:", err.Error(), " in DequeueUsers")
 		return err
 	}
 
