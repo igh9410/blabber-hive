@@ -1,0 +1,68 @@
+services:
+  zookeeper: # ZooKepper for Kafka
+    image: confluentinc/cp-zookeeper:7.4.3
+    container_name: blabber-hive-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - blabber-hive
+
+  broker: # Kafka Broker
+    image: confluentinc/cp-kafka:7.4.3
+    container_name: blabber-hive-broker
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_INTERNAL://broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - blabber-hive
+    labels:
+      app: broker
+
+  postgres: # Postgres Container
+    image: postgres:15.5-alpine
+    container_name: blabber-hive-postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - blabber-hive
+    env_file:
+      - backend/.env.docker
+    volumes:
+      - ./database:/var/lib/postgresql/data
+    labels:
+      app: postgres
+
+  redis: # Redis Container
+    image: redis:7.2.3-alpine3.18
+    container_name: blabber-hive-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - blabber-hive
+  kafka-setup:
+    image: confluentinc/cp-kafka:latest
+    container_name: blabber-hive-kafka-setup
+    depends_on:
+      - broker
+    volumes:
+      - ./backend/create-kafka-topics.sh:/tmp/create-kafka-topics.sh
+    command: "/tmp/create-kafka-topics.sh"
+    networks:
+      - blabber-hive
+    labels:
+      app: redis
+
+networks:
+  blabber-hive:
+    driver: bridge
