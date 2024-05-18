@@ -10,7 +10,7 @@ services:
       - broker
       - zookeeper
     env_file:
-      - backend/.env.docker
+      - ./backend/.env.docker
     environment:
       - REDIS_URL=redis://redis:6379
       - KAFKA_BROKER_URL=broker:9092
@@ -81,7 +81,10 @@ services:
     networks:
       - blabber-hive
     env_file:
-      - backend/.env.docker
+      - ./backend/.env.docker
+    environment:
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./database:/var/lib/postgresql/data
 
