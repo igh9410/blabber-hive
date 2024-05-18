@@ -1,0 +1,23 @@
+resources:
+  - blabber-hive/blabber-hive-deployment.yaml
+  - blabber-hive/blabber-hive-service.yaml
+  - blabber-hive/blabber-hive-env-docker-configmap.yaml
+  - fastapi/fastapi-deployment.yaml
+  - fastapi/fastapi-service.yaml
+  - grafana/grafana-deployment.yaml
+  - grafana/grafana-service.yaml
+  - kafka/broker-claim0-persistentvolumeclaim.yaml
+  - kafka/broker-deployment.yaml
+  - kafka/broker-service.yaml
+  - kafka/zookeeper-deployment.yaml
+  - nginx/nginx-cm0-configmap.yaml
+  - nginx/nginx-deployment.yaml
+  - nginx/nginx-service.yaml
+  - postgres/postgres-service.yaml
+  - postgres/postgres-env-docker-configmap.yaml
+  - prometheus/prometheus-cm0-configmap.yaml
+  - prometheus/prometheus-deployment.yaml
+  - prometheus/prometheus-service.yaml
+  - redis/redis-deployment.yaml
+  - redis/redis-service.yaml
+  # - services/connector-service.yaml
