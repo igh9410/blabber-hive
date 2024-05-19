@@ -89,6 +89,5 @@ spec:
           name: blabber-hive
           ports:
             - containerPort: 8080
-
               protocol: TCP
       restartPolicy: Always
