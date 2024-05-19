@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   annotations:
     kompose.cmd: kompose convert
@@ -8,12 +8,11 @@ metadata:
     io.kompose.service: broker
   name: broker
 spec:
+  serviceName: broker
   replicas: 1
   selector:
     matchLabels:
       io.kompose.service: broker
-  strategy:
-    type: Recreate
   template:
     metadata:
       annotations:

@@ -9,6 +9,7 @@ resources:
   - kafka/broker-claim0-persistentvolumeclaim.yaml
   - kafka/broker-deployment.yaml
   - kafka/broker-service.yaml
+  #- kafka/broker-jobs.yaml
   - kafka/zookeeper-deployment.yaml
   - nginx/nginx-cm0-configmap.yaml
   - nginx/nginx-deployment.yaml

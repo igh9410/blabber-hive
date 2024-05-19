@@ -48,7 +48,7 @@ func main() {
 
 	kafkaClient, err := kafka.NewKafkaClient()
 	if err != nil {
-		log.Printf("Failed to initialize Kafka cluster connection")
+		log.Fatalf("Failed to initialize Kafka cluster connection: %s", err)
 	}
 	defer kafkaClient.Close()
 

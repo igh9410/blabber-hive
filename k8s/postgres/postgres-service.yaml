@@ -8,6 +8,7 @@ spec:
   ports:
     - port: 5432
       targetPort: 5432
+      nodePort: 32222
   selector:
     app: blabber-hive
     tier: postgres
@@ -20,6 +21,7 @@ metadata:
     kompose.version: 1.33.0 (HEAD)
   labels:
     app: blabber-hive
+    tier: postgres
     io.kompose.service: postgres
   name: postgres
 spec:
@@ -31,7 +33,7 @@ spec:
   # Do not use this  clusterIP: None
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   annotations:
     kompose.cmd: kompose convert
@@ -40,12 +42,15 @@ metadata:
     io.kompose.service: postgres
   name: postgres
 spec:
+  serviceName: postgres
   replicas: 1
   selector:
     matchLabels:
       io.kompose.service: postgres
-  strategy:
-    type: Recreate
+      app: blabber-hive
+      tier: postgres
+  #  strategy: # Not need to specify the strategy for StatefulSet
+  #    type: Recreate
   template:
     metadata:
       annotations:
@@ -54,6 +59,8 @@ spec:
       labels:
         io.kompose.network/blabber-hive-blabber-hive: "true"
         io.kompose.service: postgres
+        app: blabber-hive
+        tier: postgres
     spec:
       containers:
         - env:
