@@ -54,7 +54,7 @@ func main() {
 
 	kafkaProducer, err := kafka.KafkaProducer()
 	if err != nil {
-		log.Printf("Failed to initialize Kafka producer")
+		log.Fatalf("Failed to initialize Kafka producer: %s", err)
 	}
 	defer kafkaProducer.Close()
 
@@ -102,7 +102,7 @@ func main() {
 	defer batchProcessor.Stop()
 
 	if _, err := kafka.KafkaConsumer(batchProcessor); err != nil {
-		log.Printf("Failed to initialize Kafka consumer: %s", err)
+		log.Fatalf("Failed to initialize Kafka consumer: %s", err)
 	}
 
 	routerConfig := &router.RouterConfig{

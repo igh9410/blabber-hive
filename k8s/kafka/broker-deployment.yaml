@@ -40,6 +40,8 @@ spec:
               value: "1"
             - name: KAFKA_ZOOKEEPER_CONNECT
               value: zookeeper:2181
+            - name: KAFKA_LOG4J_ROOT_LOGLEVEL
+              value: DEBUG
           image: confluentinc/cp-kafka:7.4.3
           name: blabber-hive-broker
           ports:
@@ -47,10 +49,10 @@ spec:
               hostPort: 9092
               protocol: TCP
           volumeMounts:
-            - mountPath: /wait-for-it.sh
-              name: broker-claim0
+            - mountPath: /var/lib/kafka
+              name: kafka-data
       restartPolicy: Always
       volumes:
-        - name: broker-claim0
+        - name: kafka-data
           persistentVolumeClaim:
-            claimName: broker-claim0
+            claimName: kafka-data-pvc

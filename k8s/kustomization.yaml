@@ -6,7 +6,7 @@ resources:
   - fastapi/fastapi-service.yaml
   - grafana/grafana-deployment.yaml
   - grafana/grafana-service.yaml
-  - kafka/broker-claim0-persistentvolumeclaim.yaml
+  - kafka/broker-pv.yaml
   - kafka/broker-deployment.yaml
   - kafka/broker-service.yaml
   #- kafka/broker-jobs.yaml
@@ -15,6 +15,7 @@ resources:
   - nginx/nginx-deployment.yaml
   - nginx/nginx-service.yaml
   - postgres/postgres-service.yaml
+  - postgres/postgres-pv.yaml
   - postgres/postgres-env-docker-configmap.yaml
   - prometheus/prometheus-cm0-configmap.yaml
   - prometheus/prometheus-deployment.yaml
