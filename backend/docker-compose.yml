@@ -37,9 +37,9 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_INTERNAL://broker:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -60,6 +60,8 @@ services:
     environment:
       POSTGRES_USERNAME: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
 
   redis: # Redis Container
     image: redis:7.2.3-alpine3.18
@@ -68,16 +70,6 @@ services:
       - "6379:6379"
     networks:
       - blabber-hive
-  # kafka-setup:
-  # image: confluentinc/cp-kafka:latest
-  # container_name: blabber-hive-kafka-setup
-  # depends_on:
-  #   - broker
-  # volumes:
-  #   - ./create-kafka-topics.sh:/tmp/create-kafka-topics.sh
-  # command: "/tmp/create-kafka-topics.sh"
-  # networks:
-  #   - blabber-hive
   prometheus:
     image: prom/prometheus
     container_name: blabber-hive-prometheus

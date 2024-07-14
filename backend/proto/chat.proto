@@ -1,0 +1,30 @@
+syntax = "proto3";
+package chat;
+
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+option go_package = "internal/chat";
+
+message ChatRoom {
+  string id = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+}
+
+message CreateChatRoomRequest {
+  string name = 1;
+}
+
+message CreateChatRoomResponse {
+  ChatRoom chat_room = 1;
+}
+
+service ChatService {
+  rpc CreateChatRoom(CreateChatRoomRequest) returns (CreateChatRoomResponse) {
+    option (google.api.http) = {
+      post: "/api/chats"
+      body: "*"
+    };
+  }
+}

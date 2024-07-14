@@ -2,7 +2,9 @@ package kafka
 
 import (
 	"backend/internal/chat"
+	"context"
 	"encoding/json"
+	"fmt"
 
 	"log"
 	"os"
@@ -44,6 +46,16 @@ func NewKafkaClient() (*confluentKafka.AdminClient, error) {
 	adminClient, err := confluentKafka.NewAdminClient(&config)
 	if err != nil {
 		log.Printf("Failed to create Admin client: %s\n", err)
+		return nil, err
+	}
+
+	// Check and create the topic if it does not exist
+	topicName := "messages"
+	numPartitions := 1
+	replicationFactor := 1
+
+	if err := CreateTopicIfNotExists(adminClient, topicName, numPartitions, replicationFactor); err != nil {
+		log.Printf("Failed to create topic if not exists: %s\n", err)
 		return nil, err
 	}
 
@@ -140,4 +152,43 @@ func KafkaConsumer(batchProcessor *BatchProcessor) (*confluentKafka.Consumer, er
 	}()
 
 	return consumer, nil
+}
+
+func CreateTopicIfNotExists(adminClient *confluentKafka.AdminClient, topic string, numPartitions int, replicationFactor int) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Check if the topic already exists
+	metadata, err := adminClient.GetMetadata(nil, false, 10000)
+	if err != nil {
+		return fmt.Errorf("failed to get metadata: %w", err)
+	}
+
+	for _, t := range metadata.Topics {
+		if t.Topic == topic {
+			log.Printf("Topic %s already exists", topic)
+			return nil
+		}
+	}
+
+	// Topic does not exist, create it
+	topicConfig := confluentKafka.TopicSpecification{
+		Topic:             topic,
+		NumPartitions:     numPartitions,
+		ReplicationFactor: replicationFactor,
+	}
+
+	results, err := adminClient.CreateTopics(ctx, []confluentKafka.TopicSpecification{topicConfig})
+	if err != nil {
+		return fmt.Errorf("failed to create topic: %w", err)
+	}
+
+	for _, result := range results {
+		if result.Error.Code() != confluentKafka.ErrNoError {
+			return fmt.Errorf("failed to create topic %s: %s", topic, result.Error.String())
+		}
+	}
+
+	log.Printf("Topic %s created successfully", topic)
+	return nil
 }

@@ -1,8 +1,12 @@
 include .env
-export
+
+PROTO_PATH=./proto
+GOOGLEAPIS_PATH=./proto/third_party/googleapis
 
 # Makefile`
+.PHONY: all run docker-push docker-run linter create-migration goose-version migrate-up migrate-down test
 
+all: generate-docs generate-server generate-client
 # Run the application
 run:
 	@echo "Running the application..."
@@ -47,3 +51,21 @@ migrate-down:
 test:
 	@echo "Running the tests..."
 	@go test ./... -v -cover -coverprofile=coverage.out
+
+# Generate OpenAPI documentation from proto files
+generate-docs:
+	@echo "Generating OpenAPI documentation..."
+	@protoc --proto_path=${PROTO_PATH} --proto_path=${GOOGLEAPIS_PATH} --openapi_out=api --openapi_opt=enum_type=string ${PROTO_PATH}/*.proto
+# Generate server code from OpenAPI specification
+generate-server:
+	@echo "Generating server code from OpenAPI specification..."
+	@oapi-codegen --generate=gin-server,strict-server,embedded-spec --package=api -o internal/api/server.gen.go docs/openapi.yaml
+
+# Generate client code from OpenAPI specification
+generate-client:
+	@echo "Generating client code from OpenAPI specification..."
+	@oapi-codegen --generate=client -o internal/client/client.gen.go --package=client docs/openapi.yaml
+
+
+
+	
