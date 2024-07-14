@@ -1,0 +1,22 @@
+basePath: /api
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: localhost:8080
+info:
+  contact:
+    email: athanasia9410@gmail.com
+    name: 임건혁
+    url: http://www.swagger.io/support
+  description: Blabber-Hive 문서
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Blabber-Hive API
+  version: "1.0"
+paths: {}
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
