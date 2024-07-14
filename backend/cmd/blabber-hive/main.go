@@ -19,6 +19,20 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// @title           Blabber-Hive API
+// @version         1.0
+// @description     Blabber-Hive 문서
+// @termsOfService  http://swagger.io/terms/
+// @contact.name   임건혁
+// @contact.url    http://www.swagger.io/support
+// @contact.email  athanasia9410@gmail.com
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+// @host      localhost:8080
+// @BasePath  /api
+// @securityDefinitions.basic  BasicAuth
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
 	if err := godotenv.Load(".env"); err != nil { // Running in local, must be run on go run . in ./cmd directory
 		slog.Info("No .env file found. Using OS environment variables.")

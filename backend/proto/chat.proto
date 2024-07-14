@@ -4,6 +4,14 @@ package chat;
 import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 
+option (openapi.options) = {
+  info: {
+    title: "Blabber-Hive API",
+    version: "v1.0.0",
+    description: "This is a custom description for Blabber-Hive API"
+  }
+};
+
 option go_package = "internal/chat";
 
 message ChatRoom {

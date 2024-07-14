@@ -4,6 +4,7 @@ import (
 	"backend/api/middleware"
 	myPrometheus "backend/infra/prometheus"
 
+	"backend/internal/api"
 	"backend/internal/chat"
 	"backend/internal/match"
 	"backend/internal/user"
@@ -14,8 +15,6 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	_ "backend/api/docs"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -46,6 +45,16 @@ func InitRouter(cfg *RouterConfig) {
 	config.AllowCredentials = true
 	r.Use(cors.New(config))
 
+	swagger, err := api.GetSwagger()
+	if err != nil {
+		panic(err)
+	}
+
+	// Allow all origins for swagger UI
+	swagger.Servers = nil
+
+	r.StaticFile("/openapi.yaml", "./api/openapi.yaml")
+
 	r.GET("/", func(c *gin.Context) {
 		//time.Sleep(5 * time.Second)
 		c.String(http.StatusOK, "Welcome Gin Server")
@@ -56,7 +65,7 @@ func InitRouter(cfg *RouterConfig) {
 	r.GET("/metrics", gin.WrapH(promhttp.HandlerFor(myPrometheus.Reg, promhttp.HandlerOpts{})))
 
 	// Add Swagger
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/openapi.yaml")))
 
 	// This route is always accessible.
 	r.GET("/api/public", func(c *gin.Context) {
