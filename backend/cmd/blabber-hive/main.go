@@ -4,8 +4,11 @@ import (
 	"context"
 	"log"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/igh9410/blabber-hive/backend/db"
 	"github.com/igh9410/blabber-hive/backend/infra/kafka"
@@ -128,6 +131,36 @@ func main() {
 		// Future handlers can be added here without changing the InitRouter signature
 	}
 
-	router.InitRouter(routerConfig)
-	cancel()
+	r := router.InitRouter(routerConfig)
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
+
+	go func() {
+		// service connections
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	log.Println("Server listening on http://localhost:8080")
+
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 5 seconds.
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown:", err)
+	}
+
+	<-ctx.Done()
+	log.Println("Server exiting")
 }

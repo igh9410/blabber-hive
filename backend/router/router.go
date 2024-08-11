@@ -4,13 +4,7 @@ import (
 	"github.com/igh9410/blabber-hive/backend/api/middleware"
 	myPrometheus "github.com/igh9410/blabber-hive/backend/infra/prometheus"
 
-	"context"
-	"log"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/igh9410/blabber-hive/backend/internal/api"
 	"github.com/igh9410/blabber-hive/backend/internal/chat"
@@ -37,7 +31,7 @@ type RouterConfig struct {
 	// FriendHandler *friend.Handler
 }
 
-func InitRouter(cfg *RouterConfig) {
+func InitRouter(cfg *RouterConfig) *gin.Engine {
 	r = gin.Default()
 
 	// CORS configuration
@@ -128,38 +122,6 @@ func InitRouter(cfg *RouterConfig) {
 	// Register the handlers with Gin
 	api.RegisterHandlers(r, handler)
 
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
-	}
+	return r
 
-	go func() {
-		// service connections
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
-		}
-	}()
-
-	log.Println("Server listening on http://localhost:8080")
-
-	// Wait for interrupt signal to gracefully shutdown the server with
-	// a timeout of 5 seconds.
-	quit := make(chan os.Signal, 1)
-	// kill (no param) default send syscanll
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shutting down server...")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
-	}
-	// catching ctx.Done(). timeout of 1 second.
-
-	<-ctx.Done()
-	log.Println("timeout of 1 second")
-
-	log.Println("Server exiting")
 }
