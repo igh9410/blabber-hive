@@ -78,29 +78,18 @@ func (s *service) JoinChatRoomByID(ctx context.Context, chatroomId uuid.UUID, us
 
 	res, err := s.Repository.JoinChatRoomByID(ctx, chatroomId, userID)
 	if err != nil {
-		log.Printf("Error occured with joining the chatroom with ID %v and user id with %v: %v", chatroomId, userID, err)
+		log.Printf("Error occurred with joining the chatroom with ID %v and user id with %v: %v", chatroomId, userID, err)
 		return chatRoom, err
 	}
 	return res, nil
 
 }
 
-/*
-// GetChatRoomInfoByID implements Service.
-func (s *service) GetChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error) {
-	chatRoomInfo, err := s.Repository.FindChatRoomInfoByID(ctx, chatRoomID)
-	if err != nil {
-		log.Printf("Error occured with finding chat room info by ID %v: %v", chatRoomID, err)
-		return nil, err
-	}
-	return chatRoomInfo, nil
-} */
-
 // GetChatRoomList implements Service.
 func (s *service) GetChatRoomList(ctx context.Context) ([]*ChatRoom, error) {
 	chatRoomList, err := s.Repository.FindChatRoomList(ctx)
 	if err != nil {
-		slog.Error("Error occured with finding chat room list: ", err.Error(), "in service.GetChatRoomList")
+		slog.Error("Error occurred with finding chat room list: ", err.Error(), "in service.GetChatRoomList")
 		return nil, err
 	}
 	return chatRoomList, nil
@@ -123,7 +112,7 @@ func (s *service) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID
 		res, err := s.Repository.GetFirstPageMessages(ctx, chatRoomID, pageSize)
 
 		if err != nil {
-			log.Printf("Error occured with getting first page messages for chat room ID %v: %v", chatRoomID, err)
+			log.Printf("Error occurred with getting first page messages for chat room ID %v: %v", chatRoomID, err)
 			return nil, err
 		}
 		log.Printf("Fetching First page messages for chat room ID %v", chatRoomID)
@@ -132,7 +121,7 @@ func (s *service) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.UUID
 
 	res, err := s.Repository.GetPaginatedMessages(ctx, chatRoomID, cursorTime, pageSize)
 	if err != nil {
-		log.Printf("Error occured with getting paginated messages for chat room ID %v: %v", chatRoomID, err)
+		log.Printf("Error occurred with getting paginated messages for chat room ID %v: %v", chatRoomID, err)
 		return nil, err
 	}
 	log.Printf("Fetching paginated messages for chat room ID %v", chatRoomID)

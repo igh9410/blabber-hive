@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/igh9410/blabber-hive/backend/infra/redis"
+	"github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/redis"
 	"github.com/igh9410/blabber-hive/backend/internal/chat"
 
 	"github.com/google/uuid"
