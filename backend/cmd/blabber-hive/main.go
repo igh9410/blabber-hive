@@ -1,18 +1,19 @@
 package main
 
 import (
-	"backend/db"
-	"backend/infra/kafka"
-	"backend/infra/redis"
-	"backend/internal/chat"
-	"backend/internal/match"
-	"backend/internal/user"
-	"backend/router"
 	"context"
 	"log"
 	"log/slog"
 	"os"
 	"strconv"
+
+	"github.com/igh9410/blabber-hive/backend/db"
+	"github.com/igh9410/blabber-hive/backend/infra/kafka"
+	"github.com/igh9410/blabber-hive/backend/infra/redis"
+	"github.com/igh9410/blabber-hive/backend/internal/chat"
+	"github.com/igh9410/blabber-hive/backend/internal/match"
+	"github.com/igh9410/blabber-hive/backend/internal/user"
+	"github.com/igh9410/blabber-hive/backend/router"
 
 	"time"
 

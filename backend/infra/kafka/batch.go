@@ -1,13 +1,14 @@
 package kafka
 
 import (
-	"backend/internal/chat"
 	"database/sql"
 	"fmt"
 	"log"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/igh9410/blabber-hive/backend/internal/chat"
 )
 
 type BatchProcessor struct {

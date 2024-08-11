@@ -1,12 +1,10 @@
 include .env
-
-PROTO_PATH=./proto
-GOOGLEAPIS_PATH=./proto/third_party/googleapis
+PROTO_PATH="./proto"
 
 # Makefile`
 .PHONY: all run docker-push docker-run linter create-migration goose-version migrate-up migrate-down test
 
-all: generate-docs generate-server generate-client
+all: generate-docs generate-server 
 # Run the application
 run:
 	@echo "Running the application..."
@@ -32,7 +30,7 @@ linter:
 
 # Create database migration file
 create-migration:
-	@cd ./db/migrations && goose create $(filter-out $@,$(MAKECMDGOALS)) sql
+	@goose -dir internal/pkg/db/migrations create $(filter-out $@,$(MAKECMDGOALS)) sql
 	@echo "Migration created."
 
 goose-version:
@@ -41,12 +39,12 @@ goose-version:
 # Run the database migrations
 migrate-up:
 	@echo "Running the database migrations..."
-	@goose -dir db/migrations postgres "host=localhost user=$$POSTGRES_USERNAME password=$$POSTGRES_PASSWORD dbname=postgres sslmode=disable port=5432" up
+	@goose -dir internal/pkg/db/migrations postgres "host=localhost user=$$POSTGRES_USERNAME password=$$POSTGRES_PASSWORD dbname=postgres sslmode=disable port=5432" up
 
 # Rollback the database migrations
 migrate-down:
 	@echo "Rolling back the database migrations..."
-	@goose -dir db/migrations postgres "host=localhost user=$$POSTGRES_USERNAME password=$$POSTGRES_PASSWORD dbname=postgres sslmode=disable port=5432" down
+	@goose -dir internal/pkg/db/migrations postgres "host=localhost user=$$POSTGRES_USERNAME password=$$POSTGRES_PASSWORD dbname=postgres sslmode=disable port=5432" down
 
 # Run the tests
 test:
@@ -56,7 +54,7 @@ test:
 # Generate Swagger documentation from proto files
 generate-docs:
 	@echo "Generating OpenAPI documentation..."
-	@protoc --proto_path=${PROTO_PATH} --proto_path=${GOOGLEAPIS_PATH} --openapi_out=api --openapi_opt=enum_type=string ${PROTO_PATH}/*.proto
+	@protoc --proto_path=${PROTO_PATH} -I=proto/third_party --openapi_out=api --openapi_opt=enum_type=string ${PROTO_PATH}/*.proto
 # Generate server code from OpenAPI specification
 generate-server:
 	@echo "Generating server code from OpenAPI specification..."

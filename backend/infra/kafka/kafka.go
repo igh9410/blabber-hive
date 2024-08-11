@@ -1,10 +1,11 @@
 package kafka
 
 import (
-	"backend/internal/chat"
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"github.com/igh9410/blabber-hive/backend/internal/chat"
 
 	"log"
 	"os"

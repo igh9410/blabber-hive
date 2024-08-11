@@ -2,21 +2,15 @@ syntax = "proto3";
 package chat;
 
 import "google/protobuf/timestamp.proto";
+import "google/api/field_behavior.proto";
 import "google/api/annotations.proto";
 
-option (openapi.options) = {
-  info: {
-    title: "Blabber-Hive API",
-    version: "v1.0.0",
-    description: "This is a custom description for Blabber-Hive API"
-  }
-};
 
 option go_package = "internal/chat";
 
 message ChatRoom {
   string id = 1;
-  string name = 2;
+  string name = 2 [(google.api.field_behavior) = REQUIRED];
   google.protobuf.Timestamp created_at = 3;
 }
 

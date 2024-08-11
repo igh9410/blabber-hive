@@ -13,7 +13,7 @@ import (
 type ChatRoom struct {
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	Id        *string    `json:"id,omitempty"`
-	Name      *string    `json:"name,omitempty"`
+	Name      string     `json:"name"`
 }
 
 // CreateChatRoomRequest defines model for CreateChatRoomRequest.

@@ -1,8 +1,9 @@
 package match
 
 import (
-	"backend/internal/chat"
 	"context"
+
+	"github.com/igh9410/blabber-hive/backend/internal/chat"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"

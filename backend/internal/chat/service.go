@@ -1,11 +1,12 @@
 package chat
 
 import (
-	"backend/internal/user"
 	"context"
 	"log"
 	"log/slog"
 	"time"
+
+	"github.com/igh9410/blabber-hive/backend/internal/user"
 
 	confluentKafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/google/uuid"
