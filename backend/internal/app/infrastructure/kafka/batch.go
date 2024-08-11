@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -76,10 +77,14 @@ func (bp *BatchProcessor) Stop() {
 // / Bulk insert chat messages into Postgres using a transaction
 func NewInsertFunc(db *pgxpool.Pool) func([]chat.Message) error {
 	return func(messages []chat.Message) error {
+		// Use context with a timeout for the transaction
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
 		// Begin a transaction
-		tx, err := db.Begin()
+		tx, err := db.Begin(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to begin transaction: %w", err)
 		}
 
 		// Prepare the insert statement with bulk support
@@ -89,19 +94,26 @@ func NewInsertFunc(db *pgxpool.Pool) func([]chat.Message) error {
 			valueStrings = append(valueStrings, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", i*5+1, i*5+2, i*5+3, i*5+4, i*5+5))
 			valueArgs = append(valueArgs, msg.ChatRoomID, msg.SenderID, msg.Content, msg.MediaURL, msg.CreatedAt)
 		}
+
 		stmt := fmt.Sprintf("INSERT INTO messages (chat_room_id, sender_id, content, media_url, created_at) VALUES %s",
 			strings.Join(valueStrings, ","))
-		_, err = tx.Exec(stmt, valueArgs...)
+
+		// Execute the bulk insert statement within the transaction
+		_, err = tx.Exec(ctx, stmt, valueArgs...)
 		if err != nil {
-			if rollbackErr := tx.Rollback(); rollbackErr != nil {
-				// Log or handle the rollback error appropriately
+			// Rollback the transaction in case of an error
+			if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
 				log.Printf("Error rolling back transaction: %s", rollbackErr)
 				return rollbackErr
 			}
-			return err
+			return fmt.Errorf("failed to execute bulk insert: %w", err)
 		}
 
 		// Commit the transaction
-		return tx.Commit()
+		if err := tx.Commit(ctx); err != nil {
+			return fmt.Errorf("failed to commit transaction: %w", err)
+		}
+
+		return nil
 	}
 }
