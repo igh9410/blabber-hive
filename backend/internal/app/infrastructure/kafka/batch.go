@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"strings"
@@ -9,6 +8,7 @@ import (
 	"time"
 
 	"github.com/igh9410/blabber-hive/backend/internal/chat"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type BatchProcessor struct {
@@ -74,7 +74,7 @@ func (bp *BatchProcessor) Stop() {
 }
 
 // / Bulk insert chat messages into Postgres using a transaction
-func NewInsertFunc(db *sql.DB) func([]chat.Message) error {
+func NewInsertFunc(db *pgxpool.Pool) func([]chat.Message) error {
 	return func(messages []chat.Message) error {
 		// Begin a transaction
 		tx, err := db.Begin()

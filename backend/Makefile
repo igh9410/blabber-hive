@@ -35,17 +35,17 @@ create-migration:
 	@echo "Migration created."
 
 goose-version:
-	@goose -dir ${DB_MIGRATION_PATH} postgres "host=localhost user=$$POSTGRES_USERNAME password=$$POSTGRES_PASSWORD dbname=postgres sslmode=disable port=5432" version
+	@goose -dir ${DB_MIGRATION_PATH} postgres "host=localhost user=${POSTGRES_USERNAME} password=${POSTGRES_PASSWORD} dbname=postgres sslmode=disable port=5432" version
 
 # Run the database migrations
 migrate-up:
 	@echo "Running the database migrations..."
-	@goose -dir ${DB_MIGRATION_PATH} postgres "host=localhost user=$$POSTGRES_USERNAME password=$$POSTGRES_PASSWORD dbname=postgres sslmode=disable port=5432" up
+	@goose -dir ${DB_MIGRATION_PATH} postgres "host=localhost user=${POSTGRES_USERNAME} password=${POSTGRES_PASSWORD} dbname=postgres sslmode=disable port=5432" up
 
 # Rollback the database migrations
 migrate-down:
 	@echo "Rolling back the database migrations..."
-	@goose -dir ${DB_MIGRATION_PATH} postgres "host=localhost user=$$POSTGRES_USERNAME password=$$POSTGRES_PASSWORD dbname=postgres sslmode=disable port=5432" down
+	@goose -dir ${DB_MIGRATION_PATH} postgres "host=localhost user=${POSTGRES_USERNAME} password=${POSTGRES_PASSWORD} dbname=postgres sslmode=disable port=5432" down
 
 # Run the tests
 test:
@@ -68,6 +68,9 @@ generate-client:
 	@echo "Generating client code from OpenAPI specification..."
 	@oapi-codegen --generate=client -o internal/client/client.gen.go --package=client api/openapi.yaml
 
-
+# Generate SQLC code 
+sqlc-generate:
+	@echo "Generating SQLC code..."
+	@sqlc generate -f internal/pkg/sqlc/sqlc.yaml
 
 	

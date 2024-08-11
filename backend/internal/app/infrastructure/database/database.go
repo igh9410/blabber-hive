@@ -1,17 +1,20 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 	"fmt"
 	"log"
+	"log/slog"
+
 	"os"
 
-	_ "github.com/jackc/pgx/v4/stdlib"
-	_ "github.com/lib/pq"
+	"github.com/igh9410/blabber-hive/backend/internal/pkg/sqlc"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Database struct {
-	db *sql.DB
+	Pool    *pgxpool.Pool
+	Querier sqlc.Querier
 }
 
 func NewDatabase() (*Database, error) {
@@ -23,7 +26,7 @@ func NewDatabase() (*Database, error) {
 	var host string
 	var connectionString string
 
-	if os.Getenv("IS_PRODUCTION") == "YES" { // Production Environment
+	if os.Getenv("IS_PRODUCTION") == "YES" || os.Getenv("IS_TEST") == "YES" { // Production Environment or Test Environment
 		connectionString = os.Getenv("DATABASE_URL")
 	} else {
 		username = os.Getenv("POSTGRES_USERNAME")
@@ -37,25 +40,31 @@ func NewDatabase() (*Database, error) {
 		connectionString = fmt.Sprintf("postgresql://%s:%s@%s:5432/postgres?sslmode=disable", username, password, host)
 	}
 
-	db, err := sql.Open("pgx", connectionString)
+	// Connect to the database
+	ctx := context.Background()
+
+	pool, err := pgxpool.New(ctx, connectionString)
 	if err != nil {
+		log.Fatalf("Unable to connect to database: %v", err)
 		return nil, err
 	}
 
-	// Force a connection to verify it works.
-	err = db.Ping()
-	if err != nil {
-		return nil, err
-	}
-	log.Println("Database initialized")
+	slog.Info("Database initialized")
 
-	return &Database{db: db}, nil
+	querier := sqlc.New(pool)
+
+	return &Database{Pool: pool, Querier: querier}, nil
 }
 
+// Close closes the database connection pool.
 func (d *Database) Close() error {
-	return d.db.Close()
+	if d.Pool != nil {
+		d.Pool.Close()
+	}
+	return nil
 }
 
-func (d *Database) GetDB() *sql.DB {
-	return d.db
+// GetDB returns the underlying *pgxpool.Pool instance for advanced database operations.
+func (d *Database) GetDB() *pgxpool.Pool {
+	return d.Pool
 }
