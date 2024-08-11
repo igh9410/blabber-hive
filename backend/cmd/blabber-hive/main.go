@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/igh9410/blabber-hive/backend/db"
-	"github.com/igh9410/blabber-hive/backend/infra/kafka"
-	"github.com/igh9410/blabber-hive/backend/infra/redis"
+	db "github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/database"
+	"github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/kafka"
+	"github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/redis"
 	"github.com/igh9410/blabber-hive/backend/internal/chat"
 	"github.com/igh9410/blabber-hive/backend/internal/match"
 	"github.com/igh9410/blabber-hive/backend/internal/user"
