@@ -32,10 +32,10 @@ type DBTX interface {
 }
 
 type repository struct {
-	db DBTX
+	db *db.database
 }
 
-func NewRepository(db DBTX) Repository {
+func NewRepository(db *db.) Repository {
 	return &repository{db: db}
 }
 

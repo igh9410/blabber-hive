@@ -100,7 +100,7 @@ func main() {
 	go matchSvc.StartMatchmakingSubscriber(ctx)
 
 	// Create an insert function with the database connection
-	insertFunc := kafka.NewInsertFunc(dbConn.GetDB())
+	insertFunc := kafka.NewInsertFunc(dbConn.Pool)
 
 	// Initialize BatchProcessor with a function to insert messages into Postgres and start KafkaConsumer
 	bulkInsertSizeStr := os.Getenv("BULK_INSERT_SIZE")
