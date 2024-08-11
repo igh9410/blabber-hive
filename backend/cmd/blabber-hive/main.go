@@ -76,11 +76,11 @@ func main() {
 	}
 	defer kafkaProducer.Close()
 
-	userRep := user.NewRepository(dbConn.GetDB())
+	userRep := user.NewRepository(dbConn)
 	userSvc := user.NewService(userRep)
 	userHandler := user.NewHandler(userSvc)
 
-	chatRep := chat.NewRepository(dbConn.GetDB())
+	chatRep := chat.NewRepository(dbConn)
 	chatSvc := chat.NewService(chatRep, userRep, kafkaProducer)
 	chatHandler := chat.NewHandler(chatSvc, userSvc)
 
