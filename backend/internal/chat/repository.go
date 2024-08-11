@@ -3,14 +3,13 @@ package chat
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/database"
+	db "github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/database"
+	"github.com/igh9410/blabber-hive/backend/internal/pkg/sqlc"
 )
 
 type Repository interface {
@@ -33,76 +32,80 @@ func NewRepository(db *db.Database) Repository {
 }
 
 func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*ChatRoom, error) {
-	tx, err := r.db.Pool.Begin(ctx)
+
+	err := r.db.Querier.CreateChatRoom(ctx, sqlc.CreateChatRoomParams{
+		Name:      sqlc.StringToPgtype(chatRoom.Name),
+		CreatedAt: sqlc.TimeToPgtype(time.Now()),
+	})
+
 	if err != nil {
-		slog.Error("Creating Chatroom transaction failed: ", err.Error(), " in CreateChatRoom")
-		return nil, err // handle error appropriately
-	}
-	// Generate a UUID for user ID
-	chatRoom.ID = uuid.New()
-
-	// Set the current timestamp for CreatedAt
-	chatRoom.CreatedAt = time.Now()
-
-	if rbErr := tx.Rollback(ctx); rbErr != nil {
-		slog.Error("Transaction rollback failed: %v", rbErr.Error(), " in CreateChatRoom")
-		return nil, rbErr
+		slog.Error("Error creating chat room: ", err.Error(), " in CreateChatRoom")
+		return nil, err
 	}
 
 	return chatRoom, nil
 }
 
 func (r *repository) FindChatRoomByID(ctx context.Context, id uuid.UUID) (*ChatRoom, error) {
-	chatRoom := &ChatRoom{}
-	query := "SELECT id,created_at FROM chat_rooms WHERE id = $1"
-	err := r.db.Pool.QueryRow(ctx, query, id).Scan(&chatRoom.ID, &chatRoom.CreatedAt)
 
+	chatRoom, err := r.db.Querier.FindChatRoomByID(ctx, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("chat room not found") // or a custom error indicating not found
-		}
+		slog.Error("Error finding chat room by ID: ", err.Error(), " in FindChatRoomByID")
 		return nil, err
 	}
-	return chatRoom, nil
+
+	return &ChatRoom{
+		ID:        chatRoom.ID,
+		Name:      sqlc.PgtypeToString(chatRoom.Name),
+		CreatedAt: sqlc.PgtypeToTime(chatRoom.CreatedAt),
+	}, nil
+
 }
 
 // FindChatRoomInfoByID implements Repository.
 func (r *repository) FindChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error) {
-	chatRoomInfo := &ChatRoomInfo{}
-	query := `
-        SELECT
-            uicr.id,
-            uicr.user_id,
-            uicr.chat_room_id,
-            cr.created_at
-        FROM users_in_chat_rooms AS uicr
-        INNER JOIN chat_rooms AS cr ON uicr.chat_room_id = cr.id
-        WHERE cr.id = $1
-        GROUP BY uicr.id, uicr.user_id, uicr.chat_room_id, cr.created_at
-    `
-	rows, err := r.db.Pool.Query(ctx, query, chatRoomID)
-	if err != nil {
-		log.Printf("Failed to fetch chat room info, err: %v", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	usersInChatRoom := make([]UserInChatRoom, 0)
-	var createdAt time.Time
-	for rows.Next() {
-		var userInChatRoom UserInChatRoom
-		err := rows.Scan(&userInChatRoom.ID, &userInChatRoom.UserID, &userInChatRoom.ChatRoomID, &createdAt)
+	/*chatRoomInfo := &ChatRoomInfo{}
+		query := `
+	        SELECT
+	            uicr.id,
+	            uicr.user_id,
+	            uicr.chat_room_id,
+	            cr.created_at
+	        FROM users_in_chat_rooms AS uicr
+	        INNER JOIN chat_rooms AS cr ON uicr.chat_room_id = cr.id
+	        WHERE cr.id = $1
+	        GROUP BY uicr.id, uicr.user_id, uicr.chat_room_id, cr.created_at
+	    `
+		rows, err := r.db.Pool.Query(ctx, query, chatRoomID)
 		if err != nil {
-			log.Printf("Failed to scan chat room info, err: %v", err.Error())
+			log.Printf("Failed to fetch chat room info, err: %v", err)
 			return nil, err
 		}
-		usersInChatRoom = append(usersInChatRoom, userInChatRoom)
+		defer rows.Close() */
+	sqlcRows, err := r.db.Querier.FindChatRoomInfoByID(ctx, chatRoomID)
+	if err != nil {
+		slog.Error("Error finding chat room info by ID", "error", err, "chatRoomID", chatRoomID)
+		return nil, fmt.Errorf("failed to find chat room info: %w", err)
 	}
 
-	chatRoomInfo.ID = chatRoomID
-	chatRoomInfo.UserList = usersInChatRoom
-	chatRoomInfo.CreatedAt = createdAt
-	return chatRoomInfo, nil
+	if len(sqlcRows) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	usersInChatRoom := make([]UserInChatRoom, len(sqlcRows))
+	for i, row := range sqlcRows {
+		usersInChatRoom[i] = UserInChatRoom{
+			ID:         row.ID,
+			UserID:     sqlc.PgtypeToUUID(row.UserID),
+			ChatRoomID: sqlc.PgtypeToUUID(row.ChatRoomID),
+		}
+	}
+
+	return &ChatRoomInfo{
+		ID:        chatRoomID,
+		UserList:  usersInChatRoom,
+		CreatedAt: sqlc.PgtypeToTime(sqlcRows[0].CreatedAt),
+	}, nil
 
 }
 

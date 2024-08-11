@@ -2,7 +2,7 @@ version: "2"
 sql:
   - engine: "postgresql"
     queries: "query.sql" # This is relative to `internal/pkg/sqlc`
-    # schema: "../../app/infrastructure/database/migrations" # Relative path to migrations
+    #schema: "../../app/infrastructure/database/migrations" # Relative path to migrations
     schema: "schema.sql"
     gen:
       go:
@@ -14,3 +14,10 @@ sql:
         emit_exact_table_names: false
         emit_interface: true
         emit_empty_slices: true
+        overrides:
+          - db_type: "uuid"
+            go_type: "github.com/google/uuid.UUID"
+          - db_type: "text"
+            go_type: "string"
+          - db_type: "timestamp"
+            go_type: "time.Time"

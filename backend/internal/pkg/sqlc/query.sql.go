@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -18,7 +19,7 @@ VALUES ($1, $2, $3)
 `
 
 type CreateChatRoomParams struct {
-	ID        pgtype.UUID      `json:"id"`
+	ID        uuid.UUID        `json:"id"`
 	Name      pgtype.Text      `json:"name"`
 	CreatedAt pgtype.Timestamp `json:"created_at"`
 }
@@ -37,13 +38,13 @@ WHERE id = $1
 `
 
 type FindChatRoomByIDRow struct {
-	ID        pgtype.UUID      `json:"id"`
+	ID        uuid.UUID        `json:"id"`
 	Name      pgtype.Text      `json:"name"`
 	CreatedAt pgtype.Timestamp `json:"created_at"`
 }
 
 // FindChatRoomByID.sql
-func (q *Queries) FindChatRoomByID(ctx context.Context, id pgtype.UUID) (FindChatRoomByIDRow, error) {
+func (q *Queries) FindChatRoomByID(ctx context.Context, id uuid.UUID) (FindChatRoomByIDRow, error) {
 	row := q.db.QueryRow(ctx, findChatRoomByID, id)
 	var i FindChatRoomByIDRow
 	err := row.Scan(&i.ID, &i.Name, &i.CreatedAt)
@@ -70,7 +71,7 @@ type FindChatRoomInfoByIDRow struct {
 }
 
 // FindChatRoomInfoByID.sql
-func (q *Queries) FindChatRoomInfoByID(ctx context.Context, id pgtype.UUID) ([]FindChatRoomInfoByIDRow, error) {
+func (q *Queries) FindChatRoomInfoByID(ctx context.Context, id uuid.UUID) ([]FindChatRoomInfoByIDRow, error) {
 	rows, err := q.db.Query(ctx, findChatRoomInfoByID, id)
 	if err != nil {
 		return nil, err
@@ -101,7 +102,7 @@ FROM chat_rooms
 `
 
 type FindChatRoomListRow struct {
-	ID        pgtype.UUID      `json:"id"`
+	ID        uuid.UUID        `json:"id"`
 	Name      pgtype.Text      `json:"name"`
 	CreatedAt pgtype.Timestamp `json:"created_at"`
 }
