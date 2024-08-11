@@ -1,13 +1,9 @@
 package router
 
 import (
-	"backend/api/middleware"
-	myPrometheus "backend/infra/prometheus"
+	"github.com/igh9410/blabber-hive/backend/api/middleware"
+	myPrometheus "github.com/igh9410/blabber-hive/backend/infra/prometheus"
 
-	"backend/internal/api"
-	"backend/internal/chat"
-	"backend/internal/match"
-	"backend/internal/user"
 	"context"
 	"log"
 	"net/http"
@@ -15,6 +11,13 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/igh9410/blabber-hive/backend/internal/api"
+	"github.com/igh9410/blabber-hive/backend/internal/chat"
+	"github.com/igh9410/blabber-hive/backend/internal/match"
+	"github.com/igh9410/blabber-hive/backend/internal/server"
+	"github.com/igh9410/blabber-hive/backend/internal/service"
+	"github.com/igh9410/blabber-hive/backend/internal/user"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -116,6 +119,14 @@ func InitRouter(cfg *RouterConfig) {
 	{
 		chatWsRoutes.GET("/:id", cfg.ChatWsHandler.RegisterClient)
 	}
+
+	chatService := service.NewChatService()
+
+	// Create an instance of your handler that implements api.ServerInterface
+	handler := api.NewStrictHandler(server.NewAPI(chatService), nil)
+
+	// Register the handlers with Gin
+	api.RegisterHandlers(r, handler)
 
 	srv := &http.Server{
 		Addr:    ":8080",
