@@ -61,3 +61,5 @@ k8s/
 /cmd/__debug_bin*
 
 access_token.txt
+
+postgres-data
