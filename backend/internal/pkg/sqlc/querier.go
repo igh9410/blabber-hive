@@ -7,7 +7,7 @@ package sqlc
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
 type Querier interface {
@@ -15,9 +15,9 @@ type Querier interface {
 	// CreateChatRoom.sql
 	CreateChatRoom(ctx context.Context, arg CreateChatRoomParams) error
 	// FindChatRoomByID.sql
-	FindChatRoomByID(ctx context.Context, id pgtype.UUID) (FindChatRoomByIDRow, error)
+	FindChatRoomByID(ctx context.Context, id uuid.UUID) (FindChatRoomByIDRow, error)
 	// FindChatRoomInfoByID.sql
-	FindChatRoomInfoByID(ctx context.Context, id pgtype.UUID) ([]FindChatRoomInfoByIDRow, error)
+	FindChatRoomInfoByID(ctx context.Context, id uuid.UUID) ([]FindChatRoomInfoByIDRow, error)
 	// FindChatRoomList.sql
 	FindChatRoomList(ctx context.Context) ([]FindChatRoomListRow, error)
 	// GetFirstPageMessages.sql

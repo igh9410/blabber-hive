@@ -5,17 +5,18 @@
 package sqlc
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Block struct {
-	ID            pgtype.UUID `json:"id"`
-	UserID        pgtype.UUID `json:"user_id"`
-	BlockedUserID pgtype.UUID `json:"blocked_user_id"`
+	ID            uuid.UUID `json:"id"`
+	UserID        uuid.UUID `json:"user_id"`
+	BlockedUserID uuid.UUID `json:"blocked_user_id"`
 }
 
 type ChatRoom struct {
-	ID        pgtype.UUID      `json:"id"`
+	ID        uuid.UUID        `json:"id"`
 	CreatedAt pgtype.Timestamp `json:"created_at"`
 	Name      pgtype.Text      `json:"name"`
 }
@@ -27,8 +28,8 @@ type Friend struct {
 }
 
 type FriendRequest struct {
-	SenderID    pgtype.UUID      `json:"sender_id"`
-	RecipientID pgtype.UUID      `json:"recipient_id"`
+	SenderID    uuid.UUID        `json:"sender_id"`
+	RecipientID uuid.UUID        `json:"recipient_id"`
 	Status      string           `json:"status"`
 	CreatedAt   pgtype.Timestamp `json:"created_at"`
 	ID          int32            `json:"id"`
@@ -53,7 +54,7 @@ type Message struct {
 }
 
 type User struct {
-	ID              pgtype.UUID      `json:"id"`
+	ID              uuid.UUID        `json:"id"`
 	Username        string           `json:"username"`
 	Email           string           `json:"email"`
 	ProfileImageUrl pgtype.Text      `json:"profile_image_url"`
