@@ -18,7 +18,7 @@ type ChatRoom struct {
 
 // CreateChatRoomRequest defines model for CreateChatRoomRequest.
 type CreateChatRoomRequest struct {
-	Name *string `json:"name,omitempty"`
+	Name string `json:"name"`
 }
 
 // CreateChatRoomResponse defines model for CreateChatRoomResponse.

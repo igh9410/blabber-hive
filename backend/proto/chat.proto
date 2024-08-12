@@ -15,7 +15,7 @@ message ChatRoom {
 }
 
 message CreateChatRoomRequest {
-  string name = 1;
+  string name = 1 [(google.api.field_behavior) = REQUIRED];
 }
 
 message CreateChatRoomResponse {
