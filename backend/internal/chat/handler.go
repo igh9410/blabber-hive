@@ -29,7 +29,7 @@ func NewHandler(s Service, u user.Service) *Handler {
 func (h *Handler) CreateChatRoom(c *gin.Context) {
 
 	var req CreateChatRoomReq
-	log.Printf("Request: %v", req)
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		slog.Error("Error binding CreateChatRoom JSON: " + err.Error())

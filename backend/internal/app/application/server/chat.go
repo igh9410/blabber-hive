@@ -8,5 +8,6 @@ import (
 
 // ChatServiceCreateChatRoom implements api.StrictServerInterface.
 func (a *API) ChatServiceCreateChatRoom(ctx context.Context, request api.ChatServiceCreateChatRoomRequestObject) (api.ChatServiceCreateChatRoomResponseObject, error) {
-	panic("unimplemented")
+	chatRoomName := request.Body.Name
+
 }

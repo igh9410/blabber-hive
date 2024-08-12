@@ -2,7 +2,7 @@ package server
 
 import (
 	"github.com/igh9410/blabber-hive/backend/api/middleware"
-	myPrometheus "github.com/igh9410/blabber-hive/backend/infra/prometheus"
+	myPrometheus "github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/prometheus"
 
 	"net/http"
 
