@@ -1,21 +1,17 @@
 package router
 
 import (
-	"backend/api/middleware"
-	myPrometheus "backend/infra/prometheus"
+	"github.com/igh9410/blabber-hive/backend/api/middleware"
+	myPrometheus "github.com/igh9410/blabber-hive/backend/infra/prometheus"
 
-	"backend/internal/chat"
-	"backend/internal/match"
-	"backend/internal/user"
-	"context"
-	"log"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
-	_ "backend/api/docs"
+	"github.com/igh9410/blabber-hive/backend/internal/api"
+	"github.com/igh9410/blabber-hive/backend/internal/chat"
+	"github.com/igh9410/blabber-hive/backend/internal/match"
+	"github.com/igh9410/blabber-hive/backend/internal/server"
+	"github.com/igh9410/blabber-hive/backend/internal/service"
+	"github.com/igh9410/blabber-hive/backend/internal/user"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -35,7 +31,7 @@ type RouterConfig struct {
 	// FriendHandler *friend.Handler
 }
 
-func InitRouter(cfg *RouterConfig) {
+func InitRouter(cfg *RouterConfig) *gin.Engine {
 	r = gin.Default()
 
 	// CORS configuration
@@ -45,6 +41,16 @@ func InitRouter(cfg *RouterConfig) {
 	config.AllowHeaders = []string{"Content-Type", "Authorization"}
 	config.AllowCredentials = true
 	r.Use(cors.New(config))
+
+	swagger, err := api.GetSwagger()
+	if err != nil {
+		panic(err)
+	}
+
+	// Allow all origins for swagger UI
+	swagger.Servers = nil
+
+	r.StaticFile("/openapi.yaml", "./api/openapi.yaml")
 
 	r.GET("/", func(c *gin.Context) {
 		//time.Sleep(5 * time.Second)
@@ -56,7 +62,7 @@ func InitRouter(cfg *RouterConfig) {
 	r.GET("/metrics", gin.WrapH(promhttp.HandlerFor(myPrometheus.Reg, promhttp.HandlerOpts{})))
 
 	// Add Swagger
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/openapi.yaml")))
 
 	// This route is always accessible.
 	r.GET("/api/public", func(c *gin.Context) {
@@ -108,38 +114,14 @@ func InitRouter(cfg *RouterConfig) {
 		chatWsRoutes.GET("/:id", cfg.ChatWsHandler.RegisterClient)
 	}
 
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
-	}
+	chatService := service.NewChatService()
 
-	go func() {
-		// service connections
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("listen: %s\n", err)
-		}
-	}()
+	// Create an instance of your handler that implements api.ServerInterface
+	handler := api.NewStrictHandler(server.NewAPI(chatService), nil)
 
-	log.Println("Server listening on http://localhost:8080")
+	// Register the handlers with Gin
+	api.RegisterHandlers(r, handler)
 
-	// Wait for interrupt signal to gracefully shutdown the server with
-	// a timeout of 5 seconds.
-	quit := make(chan os.Signal, 1)
-	// kill (no param) default send syscanll
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shutting down server...")
+	return r
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
-	}
-	// catching ctx.Done(). timeout of 1 second.
-
-	<-ctx.Done()
-	log.Println("timeout of 1 second")
-
-	log.Println("Server exiting")
 }

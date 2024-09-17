@@ -1,13 +1,14 @@
 package match
 
 import (
-	"backend/infra/redis"
-	"backend/internal/chat"
 	"context"
 	"log"
 	"log/slog"
 	"strings"
 	"time"
+
+	"github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/redis"
+	"github.com/igh9410/blabber-hive/backend/internal/chat"
 
 	"github.com/google/uuid"
 )

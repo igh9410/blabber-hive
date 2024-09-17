@@ -1,24 +1,42 @@
 package main
 
 import (
-	"backend/db"
-	"backend/infra/kafka"
-	"backend/infra/redis"
-	"backend/internal/chat"
-	"backend/internal/match"
-	"backend/internal/user"
-	"backend/router"
 	"context"
 	"log"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+
+	db "github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/database"
+	"github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/kafka"
+	"github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/redis"
+	"github.com/igh9410/blabber-hive/backend/internal/chat"
+	"github.com/igh9410/blabber-hive/backend/internal/match"
+	"github.com/igh9410/blabber-hive/backend/internal/user"
+	"github.com/igh9410/blabber-hive/backend/router"
 
 	"time"
 
 	"github.com/joho/godotenv"
 )
 
+// @title           Blabber-Hive API
+// @version         1.0
+// @description     Blabber-Hive 문서
+// @termsOfService  http://swagger.io/terms/
+// @contact.name   임건혁
+// @contact.url    http://www.swagger.io/support
+// @contact.email  athanasia9410@gmail.com
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+// @host      localhost:8080
+// @BasePath  /api
+// @securityDefinitions.basic  BasicAuth
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
 func main() {
 	if err := godotenv.Load(".env"); err != nil { // Running in local, must be run on go run . in ./cmd directory
 		slog.Info("No .env file found. Using OS environment variables.")
@@ -58,11 +76,11 @@ func main() {
 	}
 	defer kafkaProducer.Close()
 
-	userRep := user.NewRepository(dbConn.GetDB())
+	userRep := user.NewRepository(dbConn)
 	userSvc := user.NewService(userRep)
 	userHandler := user.NewHandler(userSvc)
 
-	chatRep := chat.NewRepository(dbConn.GetDB())
+	chatRep := chat.NewRepository(dbConn)
 	chatSvc := chat.NewService(chatRep, userRep, kafkaProducer)
 	chatHandler := chat.NewHandler(chatSvc, userSvc)
 
@@ -82,7 +100,7 @@ func main() {
 	go matchSvc.StartMatchmakingSubscriber(ctx)
 
 	// Create an insert function with the database connection
-	insertFunc := kafka.NewInsertFunc(dbConn.GetDB())
+	insertFunc := kafka.NewInsertFunc(dbConn.Pool)
 
 	// Initialize BatchProcessor with a function to insert messages into Postgres and start KafkaConsumer
 	bulkInsertSizeStr := os.Getenv("BULK_INSERT_SIZE")
@@ -113,6 +131,36 @@ func main() {
 		// Future handlers can be added here without changing the InitRouter signature
 	}
 
-	router.InitRouter(routerConfig)
-	cancel()
+	r := router.InitRouter(routerConfig)
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
+
+	go func() {
+		// service connections
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
+	}()
+
+	log.Println("Server listening on http://localhost:8080")
+
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 5 seconds.
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown:", err)
+	}
+
+	<-ctx.Done()
+	log.Println("Server exiting")
 }

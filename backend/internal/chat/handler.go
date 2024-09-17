@@ -1,14 +1,15 @@
 package chat
 
 import (
-	"backend/internal/common"
-	"backend/internal/user"
 	"fmt"
 	"log"
 	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/igh9410/blabber-hive/backend/internal/common"
+	"github.com/igh9410/blabber-hive/backend/internal/user"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,7 +29,7 @@ func NewHandler(s Service, u user.Service) *Handler {
 func (h *Handler) CreateChatRoom(c *gin.Context) {
 
 	var req CreateChatRoomReq
-
+	log.Printf("Request: %v", req)
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		slog.Error("Error binding CreateChatRoom JSON: " + err.Error())

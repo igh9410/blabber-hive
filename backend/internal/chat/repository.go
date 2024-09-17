@@ -3,13 +3,13 @@ package chat
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
+	db "github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/database"
+	"github.com/igh9410/blabber-hive/backend/internal/pkg/sqlc"
 )
 
 type Repository interface {
@@ -23,98 +23,94 @@ type Repository interface {
 	GetFirstPageMessages(ctx context.Context, chatRoomID uuid.UUID, pageSize int) ([]Message, error)
 }
 
-type DBTX interface {
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-	PrepareContext(context.Context, string) (*sql.Stmt, error)
-	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
-	QueryRowContext(context.Context, string, ...interface{}) *sql.Row
-	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
-}
-
 type repository struct {
-	db DBTX
+	db *db.Database
 }
 
-func NewRepository(db DBTX) Repository {
+func NewRepository(db *db.Database) Repository {
 	return &repository{db: db}
 }
 
 func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*ChatRoom, error) {
-	tx, err := r.db.BeginTx(ctx, nil)
+
+	err := r.db.Querier.CreateChatRoom(ctx, sqlc.CreateChatRoomParams{
+		Name:      sqlc.StringToPgtype(chatRoom.Name),
+		CreatedAt: sqlc.TimeToPgtype(time.Now()),
+	})
+
 	if err != nil {
-		slog.Error("Creating Chatroom transaction failed: ", err.Error(), " in CreateChatRoom")
-		return nil, err // handle error appropriately
-	}
-	// Generate a UUID for user ID
-	chatRoom.ID = uuid.New()
-
-	// Set the current timestamp for CreatedAt
-	chatRoom.CreatedAt = time.Now()
-
-	if rbErr := tx.Rollback(); rbErr != nil {
-		slog.Error("Transaction rollback failed: %v", rbErr.Error(), " in CreateChatRoom")
-		return nil, rbErr
+		slog.Error("Error creating chat room: ", err.Error(), " in CreateChatRoom")
+		return nil, err
 	}
 
 	return chatRoom, nil
 }
 
 func (r *repository) FindChatRoomByID(ctx context.Context, id uuid.UUID) (*ChatRoom, error) {
-	chatRoom := &ChatRoom{}
-	query := "SELECT id,created_at FROM chat_rooms WHERE id = $1"
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&chatRoom.ID, &chatRoom.CreatedAt)
 
+	chatRoom, err := r.db.Querier.FindChatRoomByID(ctx, id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("chat room not found") // or a custom error indicating not found
-		}
+		slog.Error("Error finding chat room by ID: ", err.Error(), " in FindChatRoomByID")
 		return nil, err
 	}
-	return chatRoom, nil
+
+	return &ChatRoom{
+		ID:        chatRoom.ID,
+		Name:      sqlc.PgtypeToString(chatRoom.Name),
+		CreatedAt: sqlc.PgtypeToTime(chatRoom.CreatedAt),
+	}, nil
+
 }
 
 // FindChatRoomInfoByID implements Repository.
 func (r *repository) FindChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error) {
-	chatRoomInfo := &ChatRoomInfo{}
-	query := `
-        SELECT
-            uicr.id,
-            uicr.user_id,
-            uicr.chat_room_id,
-            cr.created_at
-        FROM users_in_chat_rooms AS uicr
-        INNER JOIN chat_rooms AS cr ON uicr.chat_room_id = cr.id
-        WHERE cr.id = $1
-        GROUP BY uicr.id, uicr.user_id, uicr.chat_room_id, cr.created_at
-    `
-	rows, err := r.db.QueryContext(ctx, query, chatRoomID)
-	if err != nil {
-		log.Printf("Failed to fetch chat room info, err: %v", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	usersInChatRoom := make([]UserInChatRoom, 0)
-	var createdAt time.Time
-	for rows.Next() {
-		var userInChatRoom UserInChatRoom
-		err := rows.Scan(&userInChatRoom.ID, &userInChatRoom.UserID, &userInChatRoom.ChatRoomID, &createdAt)
+	/*chatRoomInfo := &ChatRoomInfo{}
+		query := `
+	        SELECT
+	            uicr.id,
+	            uicr.user_id,
+	            uicr.chat_room_id,
+	            cr.created_at
+	        FROM users_in_chat_rooms AS uicr
+	        INNER JOIN chat_rooms AS cr ON uicr.chat_room_id = cr.id
+	        WHERE cr.id = $1
+	        GROUP BY uicr.id, uicr.user_id, uicr.chat_room_id, cr.created_at
+	    `
+		rows, err := r.db.Pool.Query(ctx, query, chatRoomID)
 		if err != nil {
-			log.Printf("Failed to scan chat room info, err: %v", err.Error())
+			log.Printf("Failed to fetch chat room info, err: %v", err)
 			return nil, err
 		}
-		usersInChatRoom = append(usersInChatRoom, userInChatRoom)
+		defer rows.Close() */
+	sqlcRows, err := r.db.Querier.FindChatRoomInfoByID(ctx, chatRoomID)
+	if err != nil {
+		slog.Error("Error finding chat room info by ID", "error", err, "chatRoomID", chatRoomID)
+		return nil, fmt.Errorf("failed to find chat room info: %w", err)
 	}
 
-	chatRoomInfo.ID = chatRoomID
-	chatRoomInfo.UserList = usersInChatRoom
-	chatRoomInfo.CreatedAt = createdAt
-	return chatRoomInfo, nil
+	if len(sqlcRows) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	usersInChatRoom := make([]UserInChatRoom, len(sqlcRows))
+	for i, row := range sqlcRows {
+		usersInChatRoom[i] = UserInChatRoom{
+			ID:         row.ID,
+			UserID:     sqlc.PgtypeToUUID(row.UserID),
+			ChatRoomID: sqlc.PgtypeToUUID(row.ChatRoomID),
+		}
+	}
+
+	return &ChatRoomInfo{
+		ID:        chatRoomID,
+		UserList:  usersInChatRoom,
+		CreatedAt: sqlc.PgtypeToTime(sqlcRows[0].CreatedAt),
+	}, nil
 
 }
 
 func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID, userID uuid.UUID) (*ChatRoom, error) {
-	tx, err := r.db.BeginTx(ctx, nil)
+	tx, err := r.db.Pool.Begin(ctx)
 	if err != nil {
 		slog.Error("Joining chat room transaction failed")
 		return nil, err
@@ -123,7 +119,7 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
 	// Ensure rollback in case of error
 	defer func() {
 		if err != nil {
-			if rbErr := tx.Rollback(); rbErr != nil {
+			if rbErr := tx.Rollback(ctx); rbErr != nil {
 				slog.Error("Transaction rollback failed: ", rbErr.Error(), " in JoinChatRoomByID")
 			}
 		}
@@ -131,14 +127,14 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
 
 	// INSERT into chat rooms, UNIQUE and FOREIGN KEY constraints will handle duplicates and non-existing chat room
 	query := `INSERT INTO users_in_chat_rooms (user_id, chat_room_id) VALUES ($1, $2)`
-	_, err = tx.ExecContext(ctx, query, userID, chatRoomID)
+	_, err = tx.Exec(ctx, query, userID, chatRoomID)
 	if err != nil {
 		slog.Error("Error joining chat room, db execcontext: ", err.Error(), " in JoinChatRoomByID")
 		return nil, err
 	}
 
 	// Commit transaction
-	if err = tx.Commit(); err != nil {
+	if err = tx.Commit(ctx); err != nil {
 		slog.Error("Transaction commit failed: ", err.Error(), " in JoinChatRoomByID")
 		return nil, err
 	}
@@ -153,7 +149,7 @@ func (r *repository) JoinChatRoomByID(ctx context.Context, chatRoomID uuid.UUID,
 func (r *repository) FindChatRoomList(ctx context.Context) ([]*ChatRoom, error) {
 	query := "SELECT id, name, created_at FROM chat_rooms"
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.db.Pool.Query(ctx, query)
 	if err != nil {
 		slog.Error("Error occured with finding chat room list: ", err.Error(), " in FindChatRoomList")
 		return nil, err
@@ -194,7 +190,7 @@ func (r *repository) GetPaginatedMessages(ctx context.Context, chatRoomID uuid.U
 			ORDER BY created_at DESC
 			LIMIT $3
 		`
-	rows, err := r.db.QueryContext(ctx, query, chatRoomID, cursor, pageSize)
+	rows, err := r.db.Pool.Query(ctx, query, chatRoomID, cursor, pageSize)
 	if err != nil {
 		return nil, fmt.Errorf("querying for paginated messages: %w", err)
 	}
@@ -251,7 +247,7 @@ func (r *repository) GetFirstPageMessages(ctx context.Context, chatRoomID uuid.U
 		LIMIT $2
 	`
 
-	rows, err := r.db.QueryContext(ctx, query, chatRoomID, pageSize)
+	rows, err := r.db.Pool.Query(ctx, query, chatRoomID, pageSize)
 	if err != nil {
 		return nil, fmt.Errorf("querying for paginated messages: %w", err)
 	}
