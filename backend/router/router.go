@@ -9,8 +9,6 @@ import (
 	"github.com/igh9410/blabber-hive/backend/internal/api"
 	"github.com/igh9410/blabber-hive/backend/internal/chat"
 	"github.com/igh9410/blabber-hive/backend/internal/match"
-	"github.com/igh9410/blabber-hive/backend/internal/server"
-	"github.com/igh9410/blabber-hive/backend/internal/service"
 	"github.com/igh9410/blabber-hive/backend/internal/user"
 
 	"github.com/gin-contrib/cors"
@@ -113,14 +111,15 @@ func InitRouter(cfg *RouterConfig) *gin.Engine {
 	{
 		chatWsRoutes.GET("/:id", cfg.ChatWsHandler.RegisterClient)
 	}
+	/*
+		chatService := service.NewChatService()
 
-	chatService := service.NewChatService()
+		// Create an instance of your handler that implements api.ServerInterface
+		handler := api.NewStrictHandler(server.NewAPI(chatService), nil)
 
-	// Create an instance of your handler that implements api.ServerInterface
-	handler := api.NewStrictHandler(server.NewAPI(chatService), nil)
-
-	// Register the handlers with Gin
-	api.RegisterHandlers(r, handler)
+		// Register the handlers with Gin
+		api.RegisterHandlers(r, handler)
+	*/
 
 	return r
 
