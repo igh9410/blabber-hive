@@ -29,6 +29,7 @@ go.work
 curl.txt
 jwt.txt
 docker_commands.txt
+access_token.txt
 index.html
 index2.html
 
@@ -61,5 +62,6 @@ k8s/
 /cmd/__debug_bin*
 
 access_token.txt
+
 
 postgres-data

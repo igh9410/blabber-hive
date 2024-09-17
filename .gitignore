@@ -1,4 +1,5 @@
-./database/*
 .env
 .env.*
 *configmap*.yaml
+
+database
