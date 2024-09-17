@@ -34,7 +34,6 @@ func NewRepository(db *db.Database) Repository {
 func (r *repository) CreateChatRoom(ctx context.Context, chatRoom *ChatRoom) (*ChatRoom, error) {
 
 	err := r.db.Querier.CreateChatRoom(ctx, sqlc.CreateChatRoomParams{
-		ID:        uuid.New(),
 		Name:      sqlc.StringToPgtype(chatRoom.Name),
 		CreatedAt: sqlc.TimeToPgtype(time.Now()),
 	})
@@ -65,7 +64,24 @@ func (r *repository) FindChatRoomByID(ctx context.Context, id uuid.UUID) (*ChatR
 
 // FindChatRoomInfoByID implements Repository.
 func (r *repository) FindChatRoomInfoByID(ctx context.Context, chatRoomID uuid.UUID) (*ChatRoomInfo, error) {
-
+	/*chatRoomInfo := &ChatRoomInfo{}
+		query := `
+	        SELECT
+	            uicr.id,
+	            uicr.user_id,
+	            uicr.chat_room_id,
+	            cr.created_at
+	        FROM users_in_chat_rooms AS uicr
+	        INNER JOIN chat_rooms AS cr ON uicr.chat_room_id = cr.id
+	        WHERE cr.id = $1
+	        GROUP BY uicr.id, uicr.user_id, uicr.chat_room_id, cr.created_at
+	    `
+		rows, err := r.db.Pool.Query(ctx, query, chatRoomID)
+		if err != nil {
+			log.Printf("Failed to fetch chat room info, err: %v", err)
+			return nil, err
+		}
+		defer rows.Close() */
 	sqlcRows, err := r.db.Querier.FindChatRoomInfoByID(ctx, chatRoomID)
 	if err != nil {
 		slog.Error("Error finding chat room info by ID", "error", err, "chatRoomID", chatRoomID)
