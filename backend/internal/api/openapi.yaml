@@ -3,7 +3,10 @@
 
 openapi: 3.0.3
 info:
-    title: ChatService API
+    title: Blabber-Hive API
+    contact:
+        name: Geonhyuk Im
+        email: athanasia9410@gmail.com
     version: 0.0.1
 paths:
     /api/chats:

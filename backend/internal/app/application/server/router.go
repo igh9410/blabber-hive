@@ -1,26 +1,23 @@
 package server
 
 import (
-	"github.com/igh9410/blabber-hive/backend/api/middleware"
-	myPrometheus "github.com/igh9410/blabber-hive/backend/infra/prometheus"
-
 	"net/http"
-
-	"github.com/igh9410/blabber-hive/backend/internal/api"
-	"github.com/igh9410/blabber-hive/backend/internal/server"
-
-	"github.com/igh9410/blabber-hive/backend/internal/chat"
-	"github.com/igh9410/blabber-hive/backend/internal/match"
-
-	"github.com/igh9410/blabber-hive/backend/internal/service"
-	"github.com/igh9410/blabber-hive/backend/internal/user"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/igh9410/blabber-hive/backend/internal/api"
+	"github.com/igh9410/blabber-hive/backend/internal/api/middleware"
+	"github.com/igh9410/blabber-hive/backend/internal/app/application/service"
+	myPrometheus "github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/prometheus"
+	"github.com/igh9410/blabber-hive/backend/internal/chat"
+	"github.com/igh9410/blabber-hive/backend/internal/docs"
+	"github.com/igh9410/blabber-hive/backend/internal/match"
+	"github.com/igh9410/blabber-hive/backend/internal/user"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	swaggerFiles "github.com/swaggo/files"     // swagger embed files
-	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
+
+// swagger embed files
+// gin-swagger middleware
 
 var r *gin.Engine
 
@@ -52,7 +49,8 @@ func InitRouter(cfg *RouterConfig) *gin.Engine {
 	// Allow all origins for swagger UI
 	swagger.Servers = nil
 
-	r.StaticFile("/openapi.yaml", "./api/openapi.yaml")
+	// Serve the Swagger UI files
+	docs.UseSwagger(r, swagger)
 
 	r.GET("/", func(c *gin.Context) {
 		//time.Sleep(5 * time.Second)
@@ -62,9 +60,6 @@ func InitRouter(cfg *RouterConfig) *gin.Engine {
 	myPrometheus.InitPrometheusMetrics()
 	// Expose the registered metrics via HTTP.
 	r.GET("/metrics", gin.WrapH(promhttp.HandlerFor(myPrometheus.Reg, promhttp.HandlerOpts{})))
-
-	// Add Swagger
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/openapi.yaml")))
 
 	// This route is always accessible.
 	r.GET("/api/public", func(c *gin.Context) {
@@ -119,7 +114,7 @@ func InitRouter(cfg *RouterConfig) *gin.Engine {
 	chatService := service.NewChatService()
 
 	// Create an instance of your handler that implements api.ServerInterface
-	handler := api.NewStrictHandler(server.NewAPI(chatService), nil)
+	handler := api.NewStrictHandler(NewAPI(chatService), nil)
 
 	// Register the handlers with Gin
 	api.RegisterHandlers(r, handler)

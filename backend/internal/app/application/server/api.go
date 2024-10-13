@@ -2,7 +2,7 @@ package server
 
 import (
 	"github.com/igh9410/blabber-hive/backend/internal/api"
-	"github.com/igh9410/blabber-hive/backend/internal/service"
+	"github.com/igh9410/blabber-hive/backend/internal/app/application/service"
 )
 
 // API implements the api.StrictServerInterface

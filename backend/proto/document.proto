@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.blabberhive.api.v1;
+
+import "openapiv3/annotations.proto";
+
+option go_package = "github.com/igh9410/blabber-hive/backend/internal/api/v1;api";
+
+option (openapi.v3.document) = {
+  info: {
+    title: "Blabber-Hive API";
+    version: "0.0.1";
+    description: "";
+    contact: {
+      name: "Geonhyuk Im";
+      email: "athanasia9410@gmail.com";
+    }
+  }
+};
