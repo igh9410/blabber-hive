@@ -30,8 +30,7 @@ curl.txt
 jwt.txt
 docker_commands.txt
 access_token.txt
-index.html
-index2.html
+
 
 # Virtual Environment
 myenv/

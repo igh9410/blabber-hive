@@ -1,5 +1,5 @@
 syntax = "proto3";
-package chat;
+package com.blabberhive.api.v1;
 
 import "google/protobuf/timestamp.proto";
 import "google/api/field_behavior.proto";

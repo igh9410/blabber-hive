@@ -10,13 +10,13 @@ import (
 	"strconv"
 	"syscall"
 
+	server "github.com/igh9410/blabber-hive/backend/internal/app/application/server"
 	db "github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/database"
 	"github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/kafka"
 	"github.com/igh9410/blabber-hive/backend/internal/app/infrastructure/redis"
 	"github.com/igh9410/blabber-hive/backend/internal/chat"
 	"github.com/igh9410/blabber-hive/backend/internal/match"
 	"github.com/igh9410/blabber-hive/backend/internal/user"
-	"github.com/igh9410/blabber-hive/backend/router"
 
 	"time"
 
@@ -123,7 +123,7 @@ func main() {
 		log.Fatalf("Failed to initialize Kafka consumer: %s", err)
 	}
 
-	routerConfig := &router.RouterConfig{
+	routerConfig := &server.RouterConfig{
 		UserHandler:   userHandler,
 		ChatHandler:   chatHandler,
 		ChatWsHandler: chatWsHandler,
@@ -131,7 +131,7 @@ func main() {
 		// Future handlers can be added here without changing the InitRouter signature
 	}
 
-	r := router.InitRouter(routerConfig)
+	r := server.InitRouter(routerConfig)
 
 	srv := &http.Server{
 		Addr:    ":8080",

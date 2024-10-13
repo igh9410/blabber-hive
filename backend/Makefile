@@ -55,7 +55,7 @@ test:
 # Generate Swagger documentation from proto files
 generate-docs:
 	@echo "Generating OpenAPI documentation..."
-	@protoc --proto_path=${PROTO_PATH} -I=proto/third_party --openapi_out=api --openapi_opt=enum_type=string ${PROTO_PATH}/*.proto
+	@protoc --proto_path=${PROTO_PATH} -I=proto/third_party --openapi_out=internal/api --openapi_opt=enum_type=string ${PROTO_PATH}/*.proto
 	
 # Generate server code from OpenAPI specification
 generate-server:
